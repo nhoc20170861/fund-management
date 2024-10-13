@@ -1,0 +1,13 @@
+.custom-border-box {
+  box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.15s ease;
+  box-sizing: border-box;
+  border-radius: 0.5rem;
+}
+
+.container-task-monitor {
+  box-shadow: 0 2px 3px rgba(50, 50, 93, 0.11), 0 1px 3px #be5469;
+  padding: 1rem 1rem;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+}
