@@ -23,7 +23,7 @@
     "url": "https://github.com/creativetimofficial/argon-dashboard-react/issues"
   },
   "engines": {
-    "node": "18.14.1"
+    "node": "18.x"
   },
   "scripts": {
     "start": "set PORT=4000 && react-scripts start",
