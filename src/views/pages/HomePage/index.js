@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Grid, Button, Typography, Box } from "@mui/material";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
-import CardImage from "./components/CardImage";
+import CardImage from "components/CardImage";
 
 const CardGallery = ({ cards }) => {
   const [currentPage, setCurrentPage] = useState(0);
@@ -80,20 +80,21 @@ const HomePage = (props) => {
   const cards = [
     {
       image:
-        "https://png.pngtree.com/thumb_back/fh260/back_our/20190620/ourmid/pngtree-charity-sale-charity-poster-background-image_165549.jpg",
+        "https://baovephapluat.vn/data/images/0/2020/07/12/tamlt/anhgsffsfsfsfsf.jpg?dpi=150&quality=100&w=830",
       orgName: "Charity Fundraising 1",
-      fundName: "Fundraising for children",
-      fundType: "children",
+      fundName: "Quỹ từ thiện về giáo dục",
+      fundType: "education",
       logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQcCeoLmM1J-XCZGPTXuOguB7hGsmsvdvjkVQ&s",
       currentAmount: 5000,
       targetAmount: 10000,
-      daysRemaining: 10,
+      daysRemaining: 0,
+      isCompleted: true,
     },
     {
       image:
         "https://png.pngtree.com/thumb_back/fh260/back_our/20190620/ourmid/pngtree-charity-sale-charity-poster-background-image_165549.jpg",
-      orgName: "Phạm Anh Quân",
-      fundName: "Phạm Anh Quân",
+      orgName: "Tổ chức y tế",
+      fundName: "Dự án về y tế",
       fundType: "healthcare",
       logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQcCeoLmM1J-XCZGPTXuOguB7hGsmsvdvjkVQ&s",
       currentAmount: 3000,
@@ -102,19 +103,21 @@ const HomePage = (props) => {
     },
     {
       image:
-        "https://png.pngtree.com/thumb_back/fh260/back_our/20190620/ourmid/pngtree-charity-sale-charity-poster-background-image_165549.jpg",
-      orgName: "Charity Fundraising 3",
-      fundName: "Fundraising for education",
-      fundType: "education",
-      currentAmount: 2000,
-      targetAmount: 7000,
-      daysRemaining: 5,
+        "https://www.unicef.org/vietnam/sites/unicef.org.vietnam/files/styles/hero_tablet/public/UNI641159_0.webp?itok=3REO0U48",
+      orgName: "Tổ chức A",
+      fundName: "Dự án về trẻ em",
+      fundType: "children",
+      currentAmount: 5000000,
+      targetAmount: 10000000,
+      daysRemaining: 10,
+      logo: "https://ambassade-vietnam.com/wp-content/uploads/2024/09/b9427dca2144861adf55-172594690-3355-5124-1725947002.jpg",
+      isCompleted: false,
     },
     {
       image:
-        "https://png.pngtree.com/thumb_back/fh260/back_our/20190620/ourmid/pngtree-charity-sale-charity-poster-background-image_165549.jpg",
-      orgName: "Charity Fundraising 4",
-      fundName: "Fundraising for disaster",
+        "https://bcp.cdnchinhphu.vn/334894974524682240/2024/8/8/lulut-1723032078514-1723109893706460025454.jpeg",
+      orgName: "Tổ chức ứng phó thiên tai",
+      fundName: "Dự án về thiên tai",
       fundType: "disaster",
       logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQcCeoLmM1J-XCZGPTXuOguB7hGsmsvdvjkVQ&s",
       currentAmount: 7000,
@@ -123,30 +126,17 @@ const HomePage = (props) => {
     },
     {
       image:
-        "https://png.pngtree.com/thumb_back/fh260/back_our/20190620/ourmid/pngtree-charity-sale-charity-poster-background-image_165549.jpg",
-      orgName: "Charity Fundraising 5",
-      fundName: "Fundraising for education",
-      fundType: "education",
+        "https://bcp.cdnchinhphu.vn/thumb_w/640/334894974524682240/2024/3/22/thanhnien-1711099894064177932592.jpeg",
+      orgName: "Quỹ chống biến đổi khí hậu",
+      fundName: "Dự án về môi trường",
+      fundType: "environment",
       logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQcCeoLmM1J-XCZGPTXuOguB7hGsmsvdvjkVQ&s",
       currentAmount: 1000,
       targetAmount: 6000,
       daysRemaining: 20,
     },
   ];
-  const projects = [
-    {
-      id: 1,
-      title: "Chung tay cùng dự án sát cánh cùng em qua mùa lũ",
-      description:
-        "Hãy cùng nhau chung tay góp sức giúp đỡ các em nhỏ vùng lũ.",
-      imageUrl:
-        "https://png.pngtree.com/thumb_back/fh260/back_our/20190620/ourmid/pngtree-charity-sale-charity-poster-background-image_165549.jpg",
-      organizationLogo: "https://via.placeholder.com/40", // Thay thế bằng URL logo thực tế
-      progress: 50, // % tiến độ
-      remainingDays: 10, // Số ngày còn lại
-    },
-    // Thêm các dự án khác nếu cần
-  ];
+
   return (
     <div style={{ padding: "20px", width: "100%" }}>
       <CardGallery cards={cards} />

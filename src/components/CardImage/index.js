@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { useNavigate } from "react-router-dom";
 import {
   Card,
   CardActionArea,
@@ -15,6 +15,8 @@ import {
 import { Media } from "reactstrap";
 import { styled } from "@mui/material/styles";
 import Avatar from "@mui/material/Avatar";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import WatchLaterIcon from "@mui/icons-material/WatchLater";
 
 // Styled Card để đặt Chip vào góc trên bên trái
 const StyledCard = styled(Card)(({ theme }) => ({
@@ -33,16 +35,16 @@ const StyledChip = styled(Chip)(({ theme }) => ({
 const CardImage = ({
   image,
   orgName,
-  fundName = "Unknown",
-  fundType = "Môi trường",
+  fundName = "Môi trường",
+  fundType = "environment",
   currentAmount,
   targetAmount,
   daysRemaining,
   logo,
+  isCompleted = false, // Thêm prop isCompleted để kiểm tra dự án đã kết thúc hay chưa
 }) => {
-  const navigate = useNavigate(); // Khởi tạo useNavigate
+  const navigate = useNavigate();
 
-  // Tính phần trăm tiền tích lũy so với mục tiêu
   const progress = (currentAmount / targetAmount) * 100;
 
   const fundColors = {
@@ -50,20 +52,19 @@ const CardImage = ({
     healthcare: "secondary",
     education: "success",
     disaster: "error",
+    environment: "warning",
   };
 
-  // Đặt tên loại quỹ với màu sắc tương ứng
   const fundLabel = {
     children: "Trẻ em",
     healthcare: "Y tế",
     education: "Giáo dục",
     disaster: "Thiên tai",
+    environment: "Môi trường",
   };
 
   const convertToSlug = (str) => {
-    // Chuyển đổi tiếng Việt có dấu thành không dấu
     str = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    // Thay thế khoảng cách bằng dấu gạch ngang và chuyển tất cả về chữ thường
     return str.replace(/\s+/g, "-").toLowerCase();
   };
 
@@ -72,25 +73,44 @@ const CardImage = ({
   };
 
   const onFundClick = () => {
-    console.log("Fund clicked");
-    const slug = convertToSlug(fundName); // Chuyển đổi fundName thành slug
-    navigate(`/du-an/${slug}`); // Điều hướng tới URL mới
+    const slug = convertToSlug(fundName);
+    navigate(`/du-an/${slug}`);
   };
-  const onLogoClick = (e) => {
-    console.log("Logo clicked");
-  };
-  const onChipClick = () => {};
+
   return (
     <Card sx={{ maxWidth: 345, height: "400p" }}>
       <StyledCard>
+        {/* Icon trạng thái dự án */}
+        {isCompleted ? (
+          <CheckCircleIcon
+            sx={{
+              color: "green",
+              position: "absolute",
+              top: 10,
+              left: 10,
+              fontSize: 30,
+              zIndex: 10,
+            }}
+          />
+        ) : (
+          <WatchLaterIcon
+            sx={{
+              color: "orange",
+              position: "absolute",
+              top: 10,
+              left: 10,
+              fontSize: 30,
+              zIndex: 10,
+            }}
+          />
+        )}
+
         <StyledChip
           label={fundLabel[fundType] || "Unknown"}
           color={fundColors[fundType] || "default"}
           size="medium"
-          onClick={onChipClick} //
         />
         <CardActionArea onClick={onFundClick}>
-          {/* Hình ảnh */}
           <CardMedia
             component="img"
             height="180"
@@ -101,49 +121,26 @@ const CardImage = ({
 
         <CardContent>
           <Grid container alignItems="center" spacing={1}>
-            {/* Avatar logo tổ chức */}
-            <Button
-              onClick={onLogoClick}
-              sx={{ textTransform: "none", color: "gray" }}
-            >
+            <Button sx={{ textTransform: "none", color: "gray" }}>
               <Media className="align-items-center">
-                <Avatar
-                  alt="logo"
-                  src={logo}
-                  sx={{ width: 35, height: 35, cursor: "pointer" }}
-                ></Avatar>
-
+                <Avatar alt="logo" src={logo} sx={{ width: 35, height: 35 }} />
                 <Media className="ml-2 d-none d-lg-block">
                   <span className="mb-0 text-sm font-weight-bold">
-                    {" "}
                     {orgName}
                   </span>
                 </Media>
               </Media>
             </Button>
-            {/* <IconButton onClick={onLogoClick}>
-                  <Avatar
-                    alt="logo"
-                    src={logo}
-                    sx={{ width: 35, height: 35, cursor: "pointer" }}
-                  ></Avatar>
-                  <Typography variant="h7" component="div">
-                    {orgName}
-                  </Typography>
-                </IconButton> */}
-
-            {/* Tên quỹ */}
           </Grid>
           <div>
             <Typography
               variant="h6"
-              component="div"
               sx={{
                 fontWeight: "700",
                 cursor: "pointer",
                 "&:hover": {
-                  color: "primary.main", // Thay đổi màu sắc khi hover
-                  cursor: "pointer", // Thay đổi con trỏ thành pointer
+                  color: "primary.main",
+                  cursor: "pointer",
                 },
               }}
               onClick={onFundClick}
@@ -151,7 +148,6 @@ const CardImage = ({
               {fundName}
             </Typography>
           </div>
-          {/* Thanh tiến trình (Progress bar) */}
           <Box sx={{ display: "flex", alignItems: "center", mt: 2 }}>
             <Box sx={{ width: "100%", mr: 1 }}>
               <LinearProgress variant="determinate" value={progress} />
@@ -163,7 +159,6 @@ const CardImage = ({
             </Box>
           </Box>
 
-          {/* Số tiền hiện tại và mục tiêu */}
           <Typography
             variant="body2"
             sx={{ mt: 1, fontWeight: "bold", color: "red" }}
@@ -175,10 +170,9 @@ const CardImage = ({
               Với mục tiêu: {`${formatAmount(targetAmount)} VND`}
             </span>
           </Typography>
-          {/* Số ngày còn lại */}
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
             <span style={{ fontWeight: "700" }}>
-              Số ngày còn lại: {`${daysRemaining}`}
+              Số ngày còn lại: {daysRemaining}
             </span>
           </Typography>
         </CardContent>

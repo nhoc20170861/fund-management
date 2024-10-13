@@ -28,7 +28,8 @@ import Login from "views/pages/Login.js";
 
 import RobotDetail from "views/pages/RobotsPage/components/RobotDetail";
 import HomePage from "views/pages/HomePage";
-import FundDetail from "views/pages/FundDetail.js";
+import FundDetail from "views/pages/FundDetail";
+import ProjectList from "views/pages/ProjectList";
 var routes = [
   // {
   //   path: "/index",
@@ -75,6 +76,13 @@ var routes = [
   //   component: <Profile />,
   //   layout: "/admin",
   // },
+  // Route cho trang hiển thị danh sách dự án
+  {
+    path: "/du-an",
+    name: "ProjectList",
+    component: <ProjectList />, // Component này sẽ hiển thị danh sách các dự án
+    layout: "/auth",
+  },
   {
     path: "/du-an/:fundName",
     name: "FundDetail",
