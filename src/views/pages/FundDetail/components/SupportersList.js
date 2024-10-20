@@ -28,7 +28,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import styled from "@mui/material/styles/styled";
-
+import { formatAmountVND, formatAlgoAmount } from "utils/functions";
 // Styled component for pagination
 const CustomTablePagination = styled(TablePagination)({
   backgroundColor: "#f5f5f5",
@@ -42,21 +42,31 @@ const CustomTablePagination = styled(TablePagination)({
 });
 
 // Main component
-const SupportersList = () => {
+const SupportersList = (props) => {
   const [supporters, setSupporters] = useState([]); // State to hold supporters data
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [timeRange, setTimeRange] = useState("daily");
+  const [exchangeRate, setExchangeRate] = useState(0); // To store ALGO to VND exchange rate
 
-  useEffect(() => {
-    fetchSupporters();
-  }, []);
-
-  const fetchSupporters = async () => {
+  // Fetch the exchange rate from CoinGecko (or another API)
+  const fetchExchangeRate = async () => {
+    try {
+      const response = await fetch(
+        "https://api.coingecko.com/api/v3/simple/price?ids=algorand&vs_currencies=vnd"
+      );
+      const data = await response.json();
+      setExchangeRate(data.algorand.vnd); // Set the exchange rate for ALGO to VND
+    } catch (error) {
+      console.error("Error fetching exchange rate:", error);
+    }
+  };
+  const fetchSupporters = async (rate) => {
     try {
       const indexerUrl = "https://testnet-idx.algonode.cloud"; // Replace with your Algorand Indexer API URL
       const address =
+        props.walletAddress ||
         "MQZFSTFJAI7FYMHNGQBIBQ3WKM4SYHJFYILT6MNM5B65I7DNQONCEVKOOA"; // Replace with your Algorand address
 
       // Fetch transactions for the address
@@ -66,18 +76,34 @@ const SupportersList = () => {
 
       console.log("🚀 ~ fetchSupporters ~ data:", data);
 
-      // Process and format the transaction data
-      const formattedSupporters = data.transactions.map((tx) => ({
-        name: tx.sender, // Or the receiver based on your requirement
-        amount: tx.amount / 1e6, // Convert microAlgos to Algos
-        time: new Date(tx.created_at).toLocaleString(),
-      }));
+      const formattedSupporters = data.transactions.map((tx) => {
+        const algoAmount = tx["payment-transaction"].amount / 1e6; // Convert microAlgos to Algos
+        const vndAmount = algoAmount * rate; // Convert ALGO to VND
+        console.log("🚀 ~ formattedSupporters ~ rate:", rate);
+
+        return {
+          name: tx.sender, // Or the receiver based on your requirement
+          amountAlgo: formatAlgoAmount(algoAmount), // ALGO amount
+          amountVND: vndAmount.toFixed(0), // VND amount
+          time: new Date(tx["round-time"] * 1000).toLocaleString(), // Convert timestamp
+        };
+      });
 
       setSupporters(formattedSupporters);
     } catch (error) {
       console.error("Error fetching supporters:", error);
     }
   };
+  useEffect(() => {
+    fetchExchangeRate(); // Fetch the exchange rate on component mount
+  }, []);
+
+  // When exchange rate is set, fetch supporters data
+  useEffect(() => {
+    if (exchangeRate !== null) {
+      fetchSupporters(exchangeRate);
+    }
+  }, [exchangeRate]); // Only run when exchangeRate is updated
 
   const handleSearchChange = (event) => {
     setSearchQuery(event.target.value);
@@ -137,21 +163,24 @@ const SupportersList = () => {
         <Table>
           <TableHead>
             <TableRow>
-              {["Người ủng hộ", "Số tiền (ALGO)", "Thời gian"].map(
-                (header, index) => (
-                  <TableCell
-                    key={index}
-                    sx={{
-                      backgroundColor: "#f5f5f5",
-                      color: "black",
-                      fontWeight: "bold",
-                      fontSize: "16px",
-                    }}
-                  >
-                    {header}
-                  </TableCell>
-                )
-              )}
+              {[
+                "Người ủng hộ",
+                "Số tiền (ALGO)",
+                "Số tiền (VND)",
+                "Thời gian",
+              ].map((header, index) => (
+                <TableCell
+                  key={index}
+                  sx={{
+                    backgroundColor: "#f5f5f5",
+                    color: "black",
+                    fontWeight: "bold",
+                    fontSize: "16px",
+                  }}
+                >
+                  {header}
+                </TableCell>
+              ))}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -160,7 +189,8 @@ const SupportersList = () => {
               .map((supporter, index) => (
                 <TableRow key={index}>
                   <TableCell>{supporter.name}</TableCell>
-                  <TableCell>{supporter.amount.toFixed(6)}</TableCell>
+                  <TableCell>{supporter.amountAlgo}</TableCell>
+                  <TableCell> {formatAmountVND(supporter.amountVND)}</TableCell>
                   <TableCell>{supporter.time}</TableCell>
                 </TableRow>
               ))}

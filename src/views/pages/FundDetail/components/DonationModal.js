@@ -1,26 +1,38 @@
 import React, { useState, useEffect } from "react";
 import {
   Modal,
-  Grid,
   TextField,
   Button,
   Typography,
   InputAdornment,
   FormControlLabel,
   Checkbox,
+  Box,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
+import Grid from "@mui/material/Grid2";
 import algosdk from "algosdk";
 import { PeraWalletConnect } from "@perawallet/connect";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy"; // Icon for copy
+import { ShowToastMessage } from "utils/ShowToastMessage";
+import configs from "configs";
+const peraWallet = new PeraWalletConnect();
+const algodToken = ""; // Thay bằng API key của Algorand node
+const algodServer = configs.ALGORAND_SERVER;
+const algodPort = configs.ALGORAND_SERVER_PORT;
 
-const DonateModal = ({ open, handleClose }) => {
+const algodClient = new algosdk.Algodv2(algodToken, algodServer, algodPort);
+const DonateModal = ({
+  open,
+  handleCloseModal,
+  walletAddress: walletAddressOfProject,
+}) => {
   const [anonymous, setAnonymous] = useState(false);
   const [donationAmount, setDonationAmount] = useState("");
   const [usdEquivalent, setUsdEquivalent] = useState(""); // State for VND
   const [walletConnected, setWalletConnected] = useState(false);
   const [userAddress, setUserAddress] = useState(null);
-  const [peraWallet, setPeraWallet] = useState(
-    new PeraWalletConnect({ chainId: "4160" })
-  );
   const [exchangeRate, setExchangeRate] = useState(0); // Tỷ giá ALGO/VND
 
   useEffect(() => {
@@ -63,25 +75,46 @@ const DonateModal = ({ open, handleClose }) => {
 
   // Địa chỉ ví quỹ
   const fundWalletAddress =
+    walletAddressOfProject ||
     "MQZFSTFJAI7FYMHNGQBIBQ3WKM4SYHJFYILT6MNM5B65I7DNQONCEVKOOA";
 
   // Ngắt kết nối khi component được mount
+  // useEffect(() => {
+  //   const disconnectWallet = async () => {
+  //     if (walletConnected) {
+  //       await peraWallet.disconnect();
+  //       setWalletConnected(false);
+  //       setUserAddress(null);
+  //     }
+  //   };
+
+  //   disconnectWallet();
+
+  //   // Cleanup function để ngắt kết nối khi component unmount
+  //   return () => {
+  //     disconnectWallet();
+  //   };
+  // }, []); // Chỉ chạy một lần khi component được mount
+
   useEffect(() => {
-    const disconnectWallet = async () => {
-      if (walletConnected) {
-        await peraWallet.disconnect();
-        setWalletConnected(false);
-        setUserAddress(null);
-      }
-    };
+    // Reconnect to the session when the component is mounted
 
-    disconnectWallet();
+    peraWallet
+      .reconnectSession()
+      .then((accounts) => {
+        // Setup the disconnect event listener
+        peraWallet.connector?.on("disconnect", handleDisconnectWallet);
 
-    // Cleanup function để ngắt kết nối khi component unmount
-    return () => {
-      disconnectWallet();
-    };
-  }, []); // Chỉ chạy một lần khi component được mount
+        if (peraWallet.isConnected && accounts.length) {
+          setUserAddress(accounts[0]);
+          setWalletConnected(true);
+        }
+      })
+      .catch((error) => {
+        console.error("Error reconnecting the session:", error);
+      });
+  }, []);
+
   // Thiết lập kết nối với Pera Wallet
   const connectWallet = async () => {
     try {
@@ -89,6 +122,7 @@ const DonateModal = ({ open, handleClose }) => {
       peraWallet.connector?.on("disconnect", handleDisconnectWallet);
       setUserAddress(accounts[0]);
       setWalletConnected(true);
+      console.log("🚀 ~ connectWal ~ accounts:", accounts);
     } catch (error) {
       console.error("Lỗi kết nối ví:", error);
     }
@@ -101,108 +135,163 @@ const DonateModal = ({ open, handleClose }) => {
   };
 
   const sendTransaction = async () => {
+    if (!walletConnected) {
+      alert("Bạn cần kết nối với ví trước!");
+      return;
+    }
+    console.log("🚀 ~ sendTransaction ~ fundWalletAddress:", fundWalletAddress);
+    if (!fundWalletAddress) {
+      alert("Địa chỉ ví dự án không hợp lệ!");
+      return;
+    }
+    if (!userAddress) {
+      alert("Địa chỉ ví của bạn không hợp lệ!");
+      return;
+    }
+    console.log("🚀 ~ sendTransaction ~ userAddress:", userAddress);
+
+    async function getNodeStatus() {
+      try {
+        const status = await algodClient.status().do();
+        console.log("Node status:", status);
+      } catch (err) {
+        console.error("Failed to get node status:", err);
+      }
+    }
+
+    // Call the function to print the node status
+    getNodeStatus();
+
+    const acctInfo = await algodClient
+      .accountInformation(fundWalletAddress)
+      .do();
+
+    const acctInfoUser = await algodClient.accountInformation(userAddress).do();
+    console.log(`Account balance: ${acctInfo.amount} microAlgos`);
+    console.log(
+      `Account balance userAddress: ${acctInfoUser.amount} microAlgos`
+    );
+    if (parseFloat(usdEquivalent) <= 0 || isNaN(parseFloat(usdEquivalent))) {
+      alert("Số tiền quyên góp không hợp lệ!");
+      return;
+    }
+
+    console.log("🚀 ~ sendTransaction ~ usdEquivalent:", usdEquivalent);
+    const suggestedParams = await algodClient.getTransactionParams().do();
+    console.log("Suggested Params:", suggestedParams);
+
+    const txGroups = await generatePaymentTxns({
+      sender: userAddress,
+      receiver: fundWalletAddress,
+      amountAlgo: parseInt(usdEquivalent * 1000000, 10),
+    });
+    console.log("Transaction:", txGroups);
     try {
-      if (!walletConnected) {
-        alert("Bạn cần kết nối với ví trước!");
-        return;
-      }
-
-      if (!userAddress) {
-        alert("Địa chỉ ví không hợp lệ!");
-        return;
-      }
-      console.log("🚀 ~ sendTransaction ~ userAddress:", userAddress);
-
-      const algodToken = ""; // Thay bằng API key của Algorand node
-      const algodServer = "https://testnet-api.4160.nodely.dev";
-      const algodPort = "443";
-
-      const algodClient = new algosdk.Algodv2(
-        algodToken,
-        algodServer,
-        algodPort
-      );
-      async function getNodeStatus() {
-        try {
-          const status = await algodClient.status().do();
-          console.log("Node status:", status);
-        } catch (err) {
-          console.error("Failed to get node status:", err);
-        }
-      }
-
-      // Call the function to print the node status
-      getNodeStatus();
-
-      const acctInfo = await algodClient
-        .accountInformation(fundWalletAddress)
-        .do();
-
-      const acctInfoUser = await algodClient
-        .accountInformation(userAddress)
-        .do();
-      console.log(`Account balance: ${acctInfo.amount} microAlgos`);
-      console.log(
-        `Account balance userAddress: ${acctInfoUser.amount} microAlgos`
-      );
-      if (parseFloat(usdEquivalent) <= 0 || isNaN(parseFloat(usdEquivalent))) {
-        alert("Số tiền quyên góp không hợp lệ!");
-        return;
-      }
-
-      console.log("🚀 ~ sendTransaction ~ usdEquivalent:", usdEquivalent);
-      const params = await algodClient.getTransactionParams().do();
-      console.log("Amount:", parseInt(usdEquivalent, 10) * 1000000);
-      console.log("Suggested Params:", params);
-      const txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
-        from: userAddress,
-        to: fundWalletAddress,
-        amount: parseInt(usdEquivalent, 10) * 1000000,
-        suggestedParams: params,
-      });
-
-      console.log("Transaction:", txn);
-
-      const signedTxn = await peraWallet.signTransaction([txn]);
+      const signedTxn = await peraWallet.signTransaction([txGroups]);
       console.log("Signed Transaction:", signedTxn);
-
+      handleCloseModal();
       const { txId } = await algodClient.sendRawTransaction(signedTxn).do();
-      console.log("Transaction ID:", txId);
-      alert("Giao dịch thành công!");
+      console.log(`txns signed successfully! - txID: ${txId}`);
+      ShowToastMessage({
+        title: "Payment Transaction",
+        message: `Giao dịch thành công! - txID: ${txId}`,
+        type: "success",
+      });
+      // alert("Giao dịch thành công!");
     } catch (error) {
-      console.error("Lỗi trong khi gửi giao dịch:", error);
+      console.log("Couldn't sign payment txns", error);
       alert("Giao dịch thất bại. Vui lòng thử lại.");
     }
   };
 
+  const copyToClipboard = () => {
+    navigator.clipboard
+      .writeText(fundWalletAddress)
+      .then(() => {
+        alert("Đã sao chép địa chỉ ví vào clipboard!"); // Show success message
+      })
+      .catch((err) => {
+        console.error("Failed to copy: ", err);
+      });
+  };
+
   return (
-    <Modal open={open} onClose={handleClose}>
+    <Modal open={open} onClose={handleCloseModal}>
       <div
         style={{
           padding: "20px",
           backgroundColor: "#fff",
           margin: "100px auto",
-          width: "30rem",
+          width: "35rem",
           borderRadius: "10px",
         }}
       >
         <Typography variant="h6" component="h2" gutterBottom>
-          Nhập Thông Tin Ủng Hộ
+          - Địa chỉ ví của Dự án:
         </Typography>
-        <Grid container spacing={2}>
-          <Grid item xs={6}>
-            <TextField label="Họ và tên" variant="outlined" fullWidth />
+        <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+          <Typography
+            variant="h7"
+            component="h2"
+            gutterBottom
+            sx={{
+              wordWrap: "break-word",
+              fontWeight: "bold",
+              width: "80%",
+            }}
+          >
+            {fundWalletAddress}
+            {/* Add an icon button for copying */}
+          </Typography>
+          <Tooltip title="Sao chép địa chỉ ví">
+            <IconButton onClick={copyToClipboard} sx={{ ml: 1 }}>
+              <ContentCopyIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
+        <Typography variant="h6" component="h2" gutterBottom>
+          - Nhập Thông Tin Ủng Hộ
+        </Typography>
+        <Grid container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
+          <Grid size={6}>
+            <TextField
+              label="Họ và tên"
+              variant="outlined"
+              fullWidth
+              required
+              disabled={anonymous}
+            />
           </Grid>
-          <Grid item xs={6}>
-            <TextField label="Số điện thoại" variant="outlined" fullWidth />
+          <Grid size={6}>
+            <TextField
+              label="Số điện thoại"
+              variant="outlined"
+              fullWidth
+              required
+              disabled={anonymous}
+            />
           </Grid>
-          <Grid item xs={6}>
-            <TextField label="Địa chỉ" variant="outlined" fullWidth />
+
+          <Grid size={6}>
+            <TextField
+              label="Địa chỉ"
+              variant="outlined"
+              fullWidth
+              required
+              disabled={anonymous}
+            />
           </Grid>
-          <Grid item xs={6}>
-            <TextField label="Địa chỉ Email" variant="outlined" fullWidth />
+          <Grid size={6}>
+            <TextField
+              label="Địa chỉ Email"
+              variant="outlined"
+              fullWidth
+              required
+              disabled={anonymous}
+            />
           </Grid>
         </Grid>
+
         <FormControlLabel
           control={
             <Checkbox
@@ -223,6 +312,7 @@ const DonateModal = ({ open, handleClose }) => {
           value={donationAmount}
           onChange={handleDonationChange}
           helperText={"Ví dụ số tiền: 50.000"}
+          required
           InputProps={{
             endAdornment: <InputAdornment position="end">đ</InputAdornment>,
           }}
@@ -236,7 +326,7 @@ const DonateModal = ({ open, handleClose }) => {
         )}
 
         {/* Kết nối ví */}
-        {walletConnected ? (
+        {walletConnected && (
           <Typography
             variant="body2"
             color="green"
@@ -245,11 +335,15 @@ const DonateModal = ({ open, handleClose }) => {
           >
             Ví đã kết nối: {userAddress}
           </Typography>
-        ) : (
-          <Button variant="contained" color="secondary" onClick={connectWallet}>
-            Kết nối ví
-          </Button>
         )}
+        <Button
+          variant="contained"
+          color={walletConnected ? "secondary" : "success"}
+          fullWidth
+          onClick={!!userAddress ? handleDisconnectWallet : connectWallet}
+        >
+          {!!userAddress ? "huỷ kết nôi" : "Kết nối Pera Wallet"}
+        </Button>
 
         {/* Gửi giao dịch */}
         <Button
@@ -267,3 +361,15 @@ const DonateModal = ({ open, handleClose }) => {
 };
 
 export default DonateModal;
+async function generatePaymentTxns({ receiver, sender, amountAlgo }) {
+  const suggestedParams = await algodClient.getTransactionParams().do();
+
+  const txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+    sender,
+    receiver,
+    amount: amountAlgo || 1,
+    suggestedParams,
+  });
+
+  return [{ txn, signers: [sender] }];
+}

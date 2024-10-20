@@ -12,3 +12,14 @@
   /* display: flex;
   justify-content: center; */
 }
+
+.AuthNavbar {
+  z-index: 1000;
+}
+
+.pera-wallet-sign-txn-toast {
+  z-index: 999 !important;
+  top: 10% !important;
+  right: 10% !important;
+  position: absolute !important;
+}

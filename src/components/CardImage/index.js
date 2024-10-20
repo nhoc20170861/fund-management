@@ -93,8 +93,8 @@ const CardImage = ({
   };
 
   const onFundClick = () => {
-    const prject_name = convertToSlug(projectName);
-    if (!Number.isInteger(id)) {
+    const prject_name = convertToSlug(projectName ?? "unknown");
+    if (!id || !Number.isInteger(id)) {
       id = 1;
     }
     navigate(`/du-an/${prject_name}/${id}`);

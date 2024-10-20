@@ -35,6 +35,7 @@ import LinearProgress from "@mui/material/LinearProgress";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import SearchIcon from "@mui/icons-material/Search";
+import { pink } from "@mui/material/colors";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import PhoneIcon from "@mui/icons-material/Phone";
 import EmailIcon from "@mui/icons-material/Email";
@@ -56,37 +57,8 @@ import "slick-carousel/slick/slick-theme.css";
 import SupportersList from "./components/SupportersList";
 import { getOneProjectDetail } from "network/ApiAxios";
 import { ShowToastMessage } from "utils/ShowToastMessage";
+import { formatAmountVND } from "utils/functions";
 // Dữ liệu giả lập cho ví dụ
-
-const fundDescription = `
-# Quỹ Hỗ Trợ Cộng Đồng
-
-Quỹ Hỗ Trợ Cộng Đồng được thành lập nhằm giúp đỡ những người có hoàn cảnh khó khăn trong xã hội. Chúng tôi cam kết mang đến sự hỗ trợ thiết thực và hiệu quả cho các đối tượng cần giúp đỡ.
-
-## Mục Tiêu của Quỹ
-
-- **Hỗ trợ tài chính**: Cung cấp quỹ cho những gia đình gặp khó khăn.
-- **Giáo dục**: Tạo điều kiện cho trẻ em có hoàn cảnh khó khăn được đến trường.
-- **Y tế**: Hỗ trợ chi phí khám chữa bệnh cho những người không có khả năng chi trả.
-
-![Hình ảnh mô tả quỹ](https://givenow.vn/wp-content/uploads/2024/09/Luc-Ngan-Bac-Giang-Bao-Bac-Giang.jpg)
-
-## Lợi Ích Khi Tham Gia Quỹ
-
-Tham gia quỹ không chỉ giúp đỡ những người cần giúp mà còn mang lại cho bạn:
-
-1. **Cảm giác thỏa mãn**: Bạn sẽ cảm thấy tự hào khi giúp đỡ cộng đồng.
-2. **Mạng lưới kết nối**: Gặp gỡ những người có cùng mục tiêu và lý tưởng.
-3. **Chứng nhận tham gia**: Nhận chứng nhận để công nhận những đóng góp của bạn.
-
-## Liên Hệ
-
-Nếu bạn có bất kỳ câu hỏi nào hoặc muốn tham gia cùng chúng tôi, vui lòng liên hệ:
-
-- **Email**: support@fund.org
-- **Số điện thoại**: 0123-456-789
-- **Địa chỉ**: 123 Đường ABC, Thành phố XYZ
-`;
 
 // Styled components
 const StyledCard = styled(Card)(({ theme }) => ({
@@ -155,7 +127,7 @@ const FundDetail = () => {
     const fetchOneProjectDetail = async () => {
       try {
         setLoading(true); // Set loading to true before fetching data
-        await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate loading
+        await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate loading
         const response = await getOneProjectDetail(projectId);
 
         const { data } = response;
@@ -164,11 +136,11 @@ const FundDetail = () => {
           setProjectDetail(data.body || {});
           setIsProjectEnded(dayjs(data.body?.deadline).isBefore(dayjs()));
 
-          ShowToastMessage({
-            title: "Get data",
-            message: "Lấy dữ liệu thành công",
-            type: "success",
-          });
+          // ShowToastMessage({
+          //   title: "Get data",
+          //   message: "Lấy dữ liệu thành công",
+          //   type: "success",
+          // });
         } else {
           ShowToastMessage({
             title: "Get data",
@@ -188,9 +160,8 @@ const FundDetail = () => {
     fetchOneProjectDetail();
   }, []);
 
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
-  const handleDonationChange = (e) => setDonationAmount(e.target.value);
+  const handleOpenFormRaise = () => setOpen(true);
+  const handleCloseModal = () => setOpen(false);
   const handleAnonymousChange = (e) => setAnonymous(e.target.checked);
   const handleSearchChange = (e) => setSearchQuery(e.target.value);
   const handlePageChange = (event, newPage) => setPage(newPage);
@@ -276,7 +247,8 @@ const FundDetail = () => {
   // Cấu hình cho carousel
   const settings = {
     dots: true,
-    infinite: true,
+    infinite:
+      projectDetail?.linkcardImage && projectDetail?.linkcardImage.length > 1,
     speed: 500,
     slidesToShow: 1, // Hiển thị 1 ảnh mỗi lần
     slidesToScroll: 1,
@@ -307,40 +279,6 @@ const FundDetail = () => {
     ),
   };
 
-  const sendTransaction = async () => {
-    try {
-      const algodToken = { "X-API-Key": "Your-PureStake-API-Key" };
-      const algodServer = "https://testnet-algorand.api.purestake.io/ps2";
-      const algodPort = "";
-      const algodClient = new algosdk.Algodv2(
-        algodToken,
-        algodServer,
-        algodPort
-      );
-
-      const params = await algodClient.getTransactionParams().do();
-
-      const txn = algosdk.makePaymentTxnWithSuggestedParams(
-        sender, // Địa chỉ ví người gửi
-        receiver, // Địa chỉ ví người nhận
-        parseInt(donationAmount) * 1000000, // Chuyển đổi từ Algo sang microAlgo
-        undefined,
-        undefined,
-        params
-      );
-
-      const senderPrivateKey = "Your-Sender-Private-Key"; // Quản lý bảo mật khóa này
-      const signedTxn = txn.signTxn(senderPrivateKey);
-      const txId = txn.txID().toString();
-
-      await algodClient.sendRawTransaction(signedTxn).do();
-      setTransactionId(txId);
-      alert(`Giao dịch thành công! TxID: ${txId}`);
-    } catch (error) {
-      console.error(error);
-      alert("Có lỗi xảy ra khi gửi giao dịch!");
-    }
-  };
   return (
     <div
       style={{
@@ -365,14 +303,20 @@ const FundDetail = () => {
                   sliderRef = slider;
                 }}
               >
-                {projectDetail?.linkcardImage.length > 0 &&
+                {projectDetail?.linkcardImage &&
+                  projectDetail?.linkcardImage.length > 0 &&
                   projectDetail?.linkcardImage.map((src, index) => (
                     <CardMedia
                       key={index}
                       component="img"
                       image={src}
                       alt={`Image ${index + 1}`}
-                      sx={{ width: "100%", height: "auto", borderRadius: 2 }}
+                      sx={{
+                        width: "100%",
+                        height: "327px",
+                        borderRadius: 2,
+                        objectFit: "cover",
+                      }}
                     />
                   ))}
               </Slider>
@@ -453,7 +397,7 @@ const FundDetail = () => {
                       Số tiền mục tiêu:
                     </Typography>
                     <Typography variant="body1" sx={{ fontWeight: "500" }}>
-                      {`${formatAmount(
+                      {`${formatAmountVND(
                         projectDetail?.fund_raise_total ?? "0"
                       )} VND`}
                     </Typography>
@@ -481,7 +425,7 @@ const FundDetail = () => {
                       Đã quyên góp:
                     </Typography>
                     <Typography variant="body1" sx={{ fontWeight: "500" }}>
-                      {`${formatAmount(
+                      {`${formatAmountVND(
                         projectDetail?.current_fund ?? "0"
                       )} VND`}
                     </Typography>
@@ -511,7 +455,7 @@ const FundDetail = () => {
                   <Button
                     variant="contained"
                     color="primary"
-                    onClick={handleOpen}
+                    onClick={handleOpenFormRaise}
                     sx={{ padding: "10px 20px" }}
                   >
                     Ủng Hộ
@@ -620,6 +564,7 @@ const FundDetail = () => {
                   </Typography>
                   <Typography variant="body2" mt={1} mb={2}>
                     <LocationOnIcon
+                      color="secondary"
                       fontSize="small"
                       sx={{ verticalAlign: "middle", mr: 0.5 }}
                     />
@@ -630,7 +575,11 @@ const FundDetail = () => {
                   <Typography variant="body2" mt={1} mb={2}>
                     <PhoneIcon
                       fontSize="small"
-                      sx={{ verticalAlign: "middle", mr: 0.5 }}
+                      sx={{
+                        color: pink[500],
+                        verticalAlign: "middle",
+                        mr: 0.5,
+                      }}
                     />
                     {`Hotline: ${
                       projectDetail?.hotline ?? "Số điện thoại liên hệ"
@@ -639,7 +588,11 @@ const FundDetail = () => {
                   <Typography variant="body2" mt={1} mb={2}>
                     <EmailIcon
                       fontSize="small"
-                      sx={{ verticalAlign: "middle", mr: 0.5 }}
+                      sx={{
+                        verticalAlign: "middle",
+                        mr: 0.5,
+                        color: "orange",
+                      }}
                     />
                     {`Email: ${projectDetail?.email ?? "Email liên hệ"}`}
                   </Typography>
@@ -647,7 +600,7 @@ const FundDetail = () => {
               </Box>
             )}
             {tabIndex === 1 && (
-              <SupportersList />
+              <SupportersList walletAddress={projectDetail.project_hash} />
               // <Box sx={{ marginTop: "1rem" }}>
               //   <Box sx={{ width: "50%", paddingLeft: 2 }}>
               //     <TextField
@@ -756,9 +709,9 @@ const FundDetail = () => {
       </Card>
       {/* Modal để nhập thông tin người dùng */}
       <DonationModal
+        walletAddress={projectDetail.project_hash}
         open={open}
-        handleClose={handleClose}
-        sendTransaction={sendTransaction}
+        handleCloseModal={handleCloseModal}
         donationAmount={donationAmount}
         setDonationAmount={setDonationAmount}
         anonymous={anonymous}
@@ -774,6 +727,3 @@ const FundDetail = () => {
 };
 
 export default FundDetail;
-const formatAmount = (amount) => {
-  return new Intl.NumberFormat("vi-VN", { style: "decimal" }).format(amount);
-};
