@@ -13,8 +13,14 @@ import CardImage from "components/CardImage"; // Import component CardImage
 
 const ProjectList = () => {
   const [selectedTab, setSelectedTab] = useState(0);
-  const [activeProjects, setActiveProjects] = useState([]);
-  const [completedProjects, setCompletedProjects] = useState([]);
+  const [activeProjects, setActiveProjects] = useLocalStorage(
+    "activeProjects",
+    []
+  );
+  const [completedProjects, setCompletedProjects] = useLocalStorage(
+    "completedProjects",
+    []
+  );
 
   useEffect(() => {
     const fetchAllProjects = async () => {

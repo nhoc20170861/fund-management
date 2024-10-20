@@ -20,13 +20,13 @@
 // import Maps from "views/pages/Maps.js";
 // import Tables from "views/pages/Tables.js";
 // import Icons from "views/pages/Icons.js";
-import CreateFundOrProject from "views/pages/Devices";
+import CreateFundOrProject from "views/pages/CreateFundOrProject";
 import HomeManagement from "views/pages/Homes";
-import ProejctManagement from "views/pages/RobotsPage";
+import ProejctManagement from "views/pages/ProejctManagement";
 import Register from "views/pages/Register.js";
 import Login from "views/pages/Login.js";
 
-import RobotDetail from "views/pages/RobotsPage/components/RobotDetail";
+import RobotDetail from "views/pages/ProejctManagement/components/RobotDetail";
 import HomePage from "views/pages/HomePage";
 import FundDetail from "views/pages/FundDetail";
 import ProjectList from "views/pages/ProjectList";
