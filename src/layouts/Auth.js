@@ -22,8 +22,8 @@ import { Container, Row, Col } from "reactstrap";
 
 // core components
 import AuthNavbar from "components/Navbars/AuthNavbar.js";
-import AuthFooter from "components/Footers/AuthFooter.js";
-
+// import AuthFooter from "components/Footers/AuthFooter.js";
+import { ToastContainer } from "react-toastify";
 const Auth = (props) => {
   const mainContent = React.useRef(null);
   const location = useLocation();
@@ -42,6 +42,18 @@ const Auth = (props) => {
 
   return (
     <>
+      <ToastContainer
+        hideProgressBar={false}
+        position="bottom-left"
+        newestOnTop
+        closeOnClick
+        limit={4}
+        rtl={false}
+        pauseOnFocusLoss={false}
+        draggable
+        theme="colored"
+        pauseOnHover={false}
+      />
       <div className="main-content" ref={mainContent}>
         <AuthNavbar />
         <div className="header bg-gradient-info py-7 py-lg-8">

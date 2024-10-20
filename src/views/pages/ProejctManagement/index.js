@@ -73,42 +73,42 @@ const StyledBadge = styled(Badge)(({ theme }) => {
   return style;
 });
 
-const RobotManagement = () => {
+const ProejctManagement = () => {
   const [robotConfigs, setRobotConfigs] = useLocalStorage("robotConfig", {});
   const navigate = useNavigate();
   const location = useLocation();
   const { robotId } = useParams();
 
-  useEffect(() => {
-    const fetchRobotConfigs = async () => {
-      try {
-        const response = await getRobotConfigs();
+  // useEffect(() => {
+  //   const fetchRobotConfigs = async () => {
+  //     try {
+  //       const response = await getRobotConfigs();
 
-        const { data } = response;
-        console.log("🚀 ~ fetchRobotConfigs ~ data:", data);
-        setRobotConfigs(data.robotConfigs);
-        if (!data.success) {
-          ShowToastMessage({
-            title: "fetchAllTaskQueue",
-            message: "Can not get task queue",
-            type: "error",
-          });
-          return;
-        }
-        ShowToastMessage({
-          title: "fetch dat robotConfig",
-          message: data.message,
-          type: "success",
-        });
-      } catch (error) {
-        console.log(
-          "🚀 ~ file: index.js:223 ~ fetchAllTaskQueue ~ error:",
-          error
-        );
-      }
-    };
-    fetchRobotConfigs();
-  }, []);
+  //       const { data } = response;
+  //       console.log("🚀 ~ fetchRobotConfigs ~ data:", data);
+  //       setRobotConfigs(data.robotConfigs);
+  //       if (!data.success) {
+  //         ShowToastMessage({
+  //           title: "fetchAllTaskQueue",
+  //           message: "Can not get task queue",
+  //           type: "error",
+  //         });
+  //         return;
+  //       }
+  //       ShowToastMessage({
+  //         title: "fetch dat robotConfig",
+  //         message: data.message,
+  //         type: "success",
+  //       });
+  //     } catch (error) {
+  //       console.log(
+  //         "🚀 ~ file: index.js:223 ~ fetchAllTaskQueue ~ error:",
+  //         error
+  //       );
+  //     }
+  //   };
+  //   fetchRobotConfigs();
+  // }, []);
 
   const [isShowModal, setIsShowModal] = useState(false);
 
@@ -187,4 +187,4 @@ const RobotManagement = () => {
   );
 };
 
-export default RobotManagement;
+export default ProejctManagement;

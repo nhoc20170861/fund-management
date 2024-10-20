@@ -41,6 +41,7 @@ If you want to get inspiration or just show something directly to your clients, 
 
 - Clone the repo: `git clone https://github.com/AlgoRMind/frontend`.
 - `npm i && npm run start dev`
+- visit `http://localhost:4000` to see dashboard
 
 ## Documentation
 

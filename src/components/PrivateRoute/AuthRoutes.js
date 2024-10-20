@@ -1,14 +1,16 @@
 import React from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 
 const AuthRoutes = ({ children }) => {
-  if (localStorage.getItem("accessToken") && localStorage.getItem("username")) {
-    // Redirect them to the /login page, but save the current location they were
-    // trying to go to when they were redirected. This allows us to send them
-    // along to that page after they login, which is a nicer user experience
-    // than dropping them off on the home page.
+  const location = useLocation();
+  const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+  const accessToken = localStorage.getItem("accessToken");
 
-    return <Navigate to="/admin/robot-management" />;
+  const isProtectedRoute =
+    !["/", "/register"].includes(location.pathname) &&
+    !location.pathname.startsWith("/du-an");
+  if (accessToken && userInfo?.email && userInfo?.name && isProtectedRoute) {
+    return <Navigate to="/admin/tao-du-an" />;
   }
 
   return children;

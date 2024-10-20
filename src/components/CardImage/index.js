@@ -9,15 +9,16 @@ import {
   LinearProgress,
   Chip,
   Box,
-  Grid,
   Button,
 } from "@mui/material";
+import Grid from "@mui/material/Grid2";
 import { Media } from "reactstrap";
+
 import { styled } from "@mui/material/styles";
 import Avatar from "@mui/material/Avatar";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import WatchLaterIcon from "@mui/icons-material/WatchLater";
-
+import dayjs from "dayjs";
 // Styled Card để đặt Chip vào góc trên bên trái
 const StyledCard = styled(Card)(({ theme }) => ({
   position: "relative",
@@ -33,19 +34,37 @@ const StyledChip = styled(Chip)(({ theme }) => ({
 }));
 
 const CardImage = ({
-  image,
-  orgName,
-  fundName = "Môi trường",
-  fundType = "environment",
-  currentAmount,
-  targetAmount,
-  daysRemaining,
-  logo,
-  isCompleted = false, // Thêm prop isCompleted để kiểm tra dự án đã kết thúc hay chưa
+  id = 1,
+  user_id,
+  name: projectName = "Unknown",
+  description,
+  fund_id,
+  current_fund: currentAmount,
+  fund_raise_total: targetAmount,
+  fund_raise_count,
+  deadline,
+  project_hash,
+  is_verify,
+  status,
+  created_at,
+  updated_at,
+  deleted_at = null,
+  fund_name = "Unknown",
+  linkcardImage = [
+    "https://cdn.thuvienphapluat.vn//phap-luat/2022/LanAnh/23-07-2022/quy-tu-thien-2.jpg",
+  ],
+  type: fundType = "defaultType", // Default type
+  fund_logo,
+  isCompleted = false, // Default isCompleted
 }) => {
   const navigate = useNavigate();
 
   const progress = (currentAmount / targetAmount) * 100;
+  const isProjectEnded = dayjs(deadline).isBefore(dayjs());
+  const formattedDeadline = isProjectEnded
+    ? "Dự án đã kết thúc"
+    : `Ngày kết thúc ${dayjs(deadline).format("DD/MM/YYYY")}`;
+  const textColorDeadline = isProjectEnded ? "red" : "inherit";
 
   const fundColors = {
     children: "primary",
@@ -61,6 +80,7 @@ const CardImage = ({
     education: "Giáo dục",
     disaster: "Thiên tai",
     environment: "Môi trường",
+    defaultType: "Unknown",
   };
 
   const convertToSlug = (str) => {
@@ -73,15 +93,18 @@ const CardImage = ({
   };
 
   const onFundClick = () => {
-    const slug = convertToSlug(fundName);
-    navigate(`/du-an/${slug}`);
+    const prject_name = convertToSlug(projectName);
+    if (!Number.isInteger(id)) {
+      id = 1;
+    }
+    navigate(`/du-an/${prject_name}/${id}`);
   };
 
   return (
-    <Card sx={{ maxWidth: 345, height: "400p" }}>
+    <Card sx={{ maxWidth: 345, height: "27rem" }}>
       <StyledCard>
         {/* Icon trạng thái dự án */}
-        {isCompleted ? (
+        {isProjectEnded ? (
           <CheckCircleIcon
             sx={{
               color: "green",
@@ -114,19 +137,30 @@ const CardImage = ({
           <CardMedia
             component="img"
             height="180"
-            image={image}
-            alt={fundName}
+            image={
+              linkcardImage && linkcardImage.length > 0 && linkcardImage[0]
+                ? linkcardImage[0]
+                : "https://png.pngtree.com/background/20210710/original/pngtree-love-charity-crowdfunding-public-welfare-poster-publicity-board-picture-image_997653.jpg"
+            }
+            alt={projectName}
           />
         </CardActionArea>
 
-        <CardContent>
+        <CardContent sx={{ height: "20rem" }}>
           <Grid container alignItems="center" spacing={1}>
             <Button sx={{ textTransform: "none", color: "gray" }}>
               <Media className="align-items-center">
-                <Avatar alt="logo" src={logo} sx={{ width: 35, height: 35 }} />
+                <Avatar
+                  alt="logo"
+                  src={
+                    fund_logo ??
+                    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQcCeoLmM1J-XCZGPTXuOguB7hGsmsvdvjkVQ&s"
+                  }
+                  sx={{ width: 35, height: 35 }}
+                />
                 <Media className="ml-2 d-none d-lg-block">
                   <span className="mb-0 text-sm font-weight-bold">
-                    {orgName}
+                    {fund_name}
                   </span>
                 </Media>
               </Media>
@@ -136,6 +170,7 @@ const CardImage = ({
             <Typography
               variant="h6"
               sx={{
+                height: "3rem",
                 fontWeight: "700",
                 cursor: "pointer",
                 "&:hover": {
@@ -145,7 +180,7 @@ const CardImage = ({
               }}
               onClick={onFundClick}
             >
-              {fundName}
+              {projectName}
             </Typography>
           </div>
           <Box sx={{ display: "flex", alignItems: "center", mt: 2 }}>
@@ -171,8 +206,8 @@ const CardImage = ({
             </span>
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            <span style={{ fontWeight: "700" }}>
-              Số ngày còn lại: {daysRemaining}
+            <span style={{ fontWeight: "700", color: textColorDeadline }}>
+              {formattedDeadline}
             </span>
           </Typography>
         </CardContent>

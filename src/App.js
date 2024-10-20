@@ -24,6 +24,7 @@ import PrivateRoute from "components/PrivateRoute/PrivateRoute";
 import AuthRoutes from "components/PrivateRoute/AuthRoutes";
 import { StyledEngineProvider } from "@mui/material/styles";
 import routes from "routes.js";
+import NotFound from "views/pages/404page";
 
 function App(props) {
   const getRoutes = (routes, _layout = "/auth") => {
@@ -66,7 +67,7 @@ function App(props) {
         >
           {getRoutes(routes)}
         </Route>
-        {/* <Route path="*" element={<Navigate to="/auth/login" replace />} /> */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </StyledEngineProvider>
   );

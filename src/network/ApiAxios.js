@@ -1,5 +1,5 @@
 import axios from "axios";
-import configs from "configs";
+import configs from "../configs";
 
 // const https = require('https');
 //
@@ -21,14 +21,16 @@ instance.interceptors.request.use(
   async (config) => {
     // Cac route nay` se khong can kiem tra accessToken
     if (
-      config.url.indexOf("/login") >= 0 ||
+      config.url.indexOf("/signin") >= 0 ||
       config.url.indexOf("/refreshtoken") >= 0
     ) {
       return config;
     }
     const accessToken = localStorage.getItem("accessToken");
-    config.headers.Authorization = accessToken ? accessToken : "";
-    config.headers.ContentType = "application/json";
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
+    }
+    config.headers["Content-Type"] = "application/json";
     return config;
   },
   (err) => {
@@ -44,94 +46,112 @@ instance.interceptors.response.use(
 
     // Cac route khong can check token
     if (
-      config.url.indexOf("/login") >= 0 ||
+      config.url.indexOf("/signin") >= 0 ||
       config.url.indexOf("/refreshtoken") >= 0
     ) {
       return response;
     }
-    const { errorCode, message } = response.data;
-    if (errorCode && (errorCode === 401 || errorCode === 403)) {
-      console.log(message);
-      if (message === "jwt expired") {
-        const refreshToken = localStorage.getItem("refreshToken");
+    // const { errorCode, message } = response.data;
 
-        try {
-          const { data } = await sendRefreshToken(refreshToken);
-          if (data.success) {
-            config.headers.Authorization = data.accessToken;
-            localStorage.setItem("accessToken", data.accessToken);
+    // if (errorCode && (errorCode === 401 || errorCode === 403)) {
+    //   console.log(message);
+    //   if (message === "jwt expired") {
+    //     const refreshToken = localStorage.getItem("refreshToken");
 
-            return instance(config);
-          }
-        } catch (error) {
-          console.error(error);
-          window.location.assign("/auth/login");
-        }
-      }
-    }
+    //     try {
+    //       const { data } = await sendRefreshToken(refreshToken);
+    //       if (data.success) {
+    //         config.headers.Authorization = data.accessToken;
+    //         localStorage.setItem("accessToken", data.accessToken);
+
+    //         return instance(config);
+    //       }
+    //     } catch (error) {
+    //       console.error(error);
+    //       window.location.assign("/");
+    //     }
+    //   }
+    // }
+
+    // console.log("🚀 ~ response.data:", response.data);
+    // if (response.data?.detail === "Token has expired") {
+    //   try {
+    //     localStorage.removeItem("accessToken");
+    //     localStorage.removeItem("userInfo");
+    //     localStorage.removeItem("userId");
+    //     window.location.assign("/");
+    //   } catch (error) {
+    //     console.error(error);
+    //   }
+    // }
 
     return response;
   },
-  (err) => {
-    return Promise.reject(err);
+  (error) => {
+    // Handle errors
+    if (error.response && error.response.status === 401) {
+      console.error("401 Unauthorized error occurred");
+
+      // Remove tokens and user data from localStorage
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("userInfo");
+      localStorage.removeItem("userId");
+
+      // Redirect to the homepage
+      window.location.assign("/"); // Change to the path you want to redirect to
+    }
+
+    // Return the error as a rejected promise to propagate the error
+    return Promise.reject(error);
   }
 );
 
-export const getAll = async () => await instance.get("user/all");
+// ===================== API cho phan user =====================
+export const getAll = async () => await instance.get("/users");
 
-export const edit = async (userID, name, email) =>
-  await instance.post("/user/edit", { userID, name, email });
+export const edit = async (userID, wallet_name, wallet_address) =>
+  await instance.put(`/user/${userID}`, { wallet_name, wallet_address });
+
+export const getOneUserByEmail = async (email) =>
+  await instance.get(`/users?email=${email}`, {});
 
 export const forgotPassword = async (email) =>
-  await instance.post("user/forgotpassword", { email });
+  await instance.post("/forgotpassword", { email });
 
 export const confirmReset = async (id, password) =>
-  await instance.post(`user/resetpass/${id}`, { password });
+  await instance.post(`/resetpass/${id}`, { password });
 
 export const sendRefreshToken = async (refreshToken) =>
-  await instance.post("/user/refreshtoken", { refreshToken });
+  await instance.post("/refreshtoken", { refreshToken });
 
 // Api cho phan authentication
 export const confirmRegister = async (id) =>
-  await instance.post(`auth/confirm/${id}`);
+  await instance.post(`/confirm/${id}`);
 
-export const login = async (username, password) =>
-  await instance.post("auth/login", { username, password });
+export const signin = async (email, password) =>
+  await instance.post("/signin", { email, password });
 
 export const logout = async (accessToken) =>
-  await instance.post("auth/logout", { accessToken });
+  await instance.post("/signout", { accessToken });
 
-export const register = async (
-  username,
-  email,
-  password,
-  phone,
-  agency,
-  role
-) =>
-  await instance.post("auth/register", {
-    username,
-    email,
-    password,
-    phone,
-    agency,
-    role,
+export const register = async (payload) =>
+  await instance.post("/register", {
+    name: payload.yourName || "unknow",
+    email: payload.email || "unknow",
+    password: payload.password,
+    birthday: payload.birthDay || "1999-04-02",
+    phone: payload.phone || "03381104xx",
+    role: payload.role || "user",
   });
 
-// Api cho phan control multi robot
-export const getRobotConfigs = async () =>
-  await instance.get(`ros/robot/getRobotConfigs`, {});
+// ===================== API cho phan project =====================
+export const getAllProjects = async () => await instance.get(`projects`, {});
 
-export const getTaskQueueFromAllRobots = async () =>
-  await instance.get(`ros/robot/getTaskQueueFromAllRobots`, {});
+export const getOneProjectDetail = async (projectId) =>
+  await instance.get(`/projects/${projectId}`, {});
 
-export const getCurrentPose = async () =>
-  await instance.get(`ros/robot/getCurrentPose`, {});
-
-export const resetAllTaskQueue = async () =>
-  await instance.post(`ros/robot/resetAllTaskQueue`, {});
-export const sendNewTask = async (newTask) =>
-  await instance.post(`ros/robot/createNewTask`, newTask);
+export const createNewProject = async (projectDetail) =>
+  await instance.post(`/projects`, { ...projectDetail });
 
 // Api cho phan control a robot
 export const createNewTaskForOneRobot = async (robotId, taskList) =>
@@ -154,11 +174,13 @@ export const callServiceActiveGoalAgain = async ({
     activeGoalAgain,
   });
 
-// api crate and get targetPoint
-export const createNewTargetPoint = async (newTargetPoint) =>
-  await instance.post(`ros/robot/createNewTargetPoint`, { newTargetPoint });
-export const getAllTargetPoint = async (mapId) =>
-  await instance.get(`ros/robot/getAllTargetPoint/${mapId}`, {});
+// ===================== API cho phan fund =====================
+export const createNewFund = async (fundDetail) => {
+  console.log(fundDetail);
+  return await instance.post(`/funds/create`, { ...fundDetail });
+};
+export const getFundsForOneUser = async (userId) =>
+  await instance.get(`/funds/user/${userId}`, {});
 
 // load map config file
 export const getConfigMap = async (fileName) =>
