@@ -34,26 +34,33 @@ import {
   Row,
   Col,
 } from "reactstrap";
-import { login } from "../../network/ApiAxios";
+import { signin } from "../../network/ApiAxios";
 
 const Login = (props) => {
-  const [username, setUername] = useState("");
+  const [Email, setUername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const tryLogin = async () => {
     try {
-      const response = await login(username, password);
-      console.log("🚀 ~ file: Login.js:47 ~ tryLogin ~ response:", response);
+      const response = await signin(Email, password);
       const { data } = response;
-      if (data.success) {
+      console.log("🚀 ~ file: Login.js:47 ~ tryLogin ~ response:", data);
+      if (data.statusCode === 200) {
         // setError("");
-        localStorage.setItem("accessToken", data.accessToken);
-        localStorage.setItem("refreshToken", data.refreshToken);
-        localStorage.setItem("username", data.userInfo.username);
+        localStorage.setItem("accessToken", data.body.token);
+        // localStorage.setItem("refreshToken", data.refreshToken);
+        localStorage.setItem(
+          "userInfo",
+          JSON.stringify({
+            email: data.body.email,
+            name: data.body.name,
+          })
+        );
+        localStorage.setItem("userId", data.body.id);
 
-        navigate("/");
+        navigate("/admin/tao-du-an", { replace: true });
       } else {
         setPassword("");
         setError(data.message);
@@ -123,10 +130,10 @@ const Login = (props) => {
                     </InputGroupText>
                   </InputGroupAddon>
                   <Input
-                    placeholder="Username"
-                    type="username"
-                    autoComplete="username"
-                    value={username}
+                    placeholder="Email"
+                    type="Email"
+                    autoComplete="Email"
+                    value={Email}
                     onChange={(e) => setUername(e.target.value)}
                   />
                 </InputGroup>

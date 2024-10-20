@@ -35,7 +35,7 @@ const AuthNavbar = () => {
     <>
       <Navbar className="navbar-top navbar-horizontal navbar-dark" expand="md">
         <Container className="px-4">
-          <NavbarBrand to="/login" tag={Link}>
+          <NavbarBrand to="/" tag={Link}>
             <img
               style={{ height: "5rem" }}
               alt="..."

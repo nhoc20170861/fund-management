@@ -1,9 +1,16 @@
-import React, { useState } from "react";
-import { Grid, Button, Typography, Box } from "@mui/material";
+import React, { useState, useEffect } from "react";
+import { Button, Typography, Box } from "@mui/material";
+import Grid from "@mui/material/Grid2";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import CardImage from "components/CardImage";
-
+import {
+  writeStorage,
+  deleteFromStorage,
+  useLocalStorage,
+} from "@rehooks/local-storage";
+import { ShowToastMessage } from "utils/ShowToastMessage";
+import { getAllProjects } from "../../../network/ApiAxios";
 const CardGallery = ({ cards }) => {
   const [currentPage, setCurrentPage] = useState(0);
   const cardsPerPage = 3;
@@ -77,69 +84,43 @@ const CardGallery = ({ cards }) => {
 };
 const HomePage = (props) => {
   // Danh sách các thẻ card
-  const cards = [
-    {
-      image:
-        "https://baovephapluat.vn/data/images/0/2020/07/12/tamlt/anhgsffsfsfsfsf.jpg?dpi=150&quality=100&w=830",
-      orgName: "Charity Fundraising 1",
-      fundName: "Quỹ từ thiện về giáo dục",
-      fundType: "education",
-      logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQcCeoLmM1J-XCZGPTXuOguB7hGsmsvdvjkVQ&s",
-      currentAmount: 5000,
-      targetAmount: 10000,
-      daysRemaining: 0,
-      isCompleted: true,
-    },
-    {
-      image:
-        "https://png.pngtree.com/thumb_back/fh260/back_our/20190620/ourmid/pngtree-charity-sale-charity-poster-background-image_165549.jpg",
-      orgName: "Tổ chức y tế",
-      fundName: "Dự án về y tế",
-      fundType: "healthcare",
-      logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQcCeoLmM1J-XCZGPTXuOguB7hGsmsvdvjkVQ&s",
-      currentAmount: 3000,
-      targetAmount: 8000,
-      daysRemaining: 15,
-    },
-    {
-      image:
-        "https://www.unicef.org/vietnam/sites/unicef.org.vietnam/files/styles/hero_tablet/public/UNI641159_0.webp?itok=3REO0U48",
-      orgName: "Tổ chức A",
-      fundName: "Dự án về trẻ em",
-      fundType: "children",
-      currentAmount: 5000000,
-      targetAmount: 10000000,
-      daysRemaining: 10,
-      logo: "https://ambassade-vietnam.com/wp-content/uploads/2024/09/b9427dca2144861adf55-172594690-3355-5124-1725947002.jpg",
-      isCompleted: false,
-    },
-    {
-      image:
-        "https://bcp.cdnchinhphu.vn/334894974524682240/2024/8/8/lulut-1723032078514-1723109893706460025454.jpeg",
-      orgName: "Tổ chức ứng phó thiên tai",
-      fundName: "Dự án về thiên tai",
-      fundType: "disaster",
-      logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQcCeoLmM1J-XCZGPTXuOguB7hGsmsvdvjkVQ&s",
-      currentAmount: 7000,
-      targetAmount: 9000,
-      daysRemaining: 7,
-    },
-    {
-      image:
-        "https://bcp.cdnchinhphu.vn/thumb_w/640/334894974524682240/2024/3/22/thanhnien-1711099894064177932592.jpeg",
-      orgName: "Quỹ chống biến đổi khí hậu",
-      fundName: "Dự án về môi trường",
-      fundType: "environment",
-      logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQcCeoLmM1J-XCZGPTXuOguB7hGsmsvdvjkVQ&s",
-      currentAmount: 1000,
-      targetAmount: 6000,
-      daysRemaining: 20,
-    },
-  ];
+
+  const [projectList, setProjectList] = useLocalStorage("projectList", []);
+
+  useEffect(() => {
+    const fetchAllProjects = async () => {
+      try {
+        const response = await getAllProjects();
+
+        const { data } = response;
+        console.log("🚀 ~ fetchAllProjects ~ data:", data);
+        if (data.statusCode === 200 && data.body.length > 0) {
+          setProjectList(data.body || []);
+          // ShowToastMessage({
+          //   title: "Get data",
+          //   message: "Lấy dữ liệu thành công",
+          //   type: "success",
+          // });
+        } else {
+          ShowToastMessage({
+            title: "Get data",
+            message: "Không có dữ liệu",
+            type: "warning",
+          });
+        }
+      } catch (error) {
+        console.log(
+          "🚀 ~ file: index.js:223 ~ fetchAllProjects ~ error:",
+          error
+        );
+      }
+    };
+    fetchAllProjects();
+  }, []);
 
   return (
     <div style={{ padding: "20px", width: "100%" }}>
-      <CardGallery cards={cards} />
+      <CardGallery cards={projectList} />
     </div>
   );
 };

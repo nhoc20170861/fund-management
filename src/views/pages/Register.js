@@ -37,11 +37,13 @@ import { register } from "../../network/ApiAxios";
 import configs from "configs";
 
 const Register = () => {
-  const [username, setUsername] = useState("");
+  const [yourName, setYourName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [birthDay, setBirthdate] = useState("");
   const [checkbox, setCheckbox] = useState(false);
+
   const [error, setError] = useState("");
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState(
@@ -54,7 +56,16 @@ const Register = () => {
   }
 
   const registerUser = async () => {
-    if (!(username && email && password && confirmPassword && checkbox)) {
+    if (
+      !(
+        yourName &&
+        email &&
+        password &&
+        confirmPassword &&
+        birthDay &&
+        checkbox
+      )
+    ) {
       setError(
         "Make sure to fill all the inputs and agree to the privacy policy"
       );
@@ -76,24 +87,30 @@ const Register = () => {
       setError("Passwords must have 6 characters");
       return;
     }
-    const response = await register(username, email, password);
-    console.log(
-      "🚀 ~ file: Register.js:62 ~ registerUser ~ response:",
-      response
-    );
+
+    const payload = {
+      yourName,
+      email,
+      password,
+      birthDay,
+    };
+
+    console.log("🚀 ~ registerUser ~ payload:", payload);
+    const response = await register(payload);
+
     const { data } = response;
-    if (!data.success) {
-      setError(data.message);
+    if (data.statusCode !== 200) {
+      setError("Something went wrong, please try again");
       return;
     }
     if (configs.DEMO) {
       setToastMessage(
         "This is a demo, so we will not send you an email. Instead, click on this link to verify your account:"
       );
-      setUserID(username);
+      setUserID(data.user.id || null);
     }
     setError("");
-    setUsername("");
+    setYourName("");
     setEmail("");
     setPassword("");
     setConfirmPassword("");
@@ -139,10 +156,8 @@ const Register = () => {
           <Toast.Body>
             {toastMessage}
             {configs.DEMO ? (
-              <a
-                href={configs.APP_DOMAIN_NAME + "/auth/confirm-email/" + userID}
-              >
-                {configs.APP_DOMAIN_NAME + "/auth/confirm-email/" + userID}
+              <a href={configs.APP_DOMAIN_NAME + "/confirm-email/" + userID}>
+                {configs.APP_DOMAIN_NAME + "/confirm-email/" + userID}
               </a>
             ) : null}
           </Toast.Body>
@@ -198,21 +213,43 @@ const Register = () => {
               </p>
             </div>
             <Form role="form">
-              <FormGroup>
-                <InputGroup className="input-group-alternative mb-3">
-                  <InputGroupAddon addonType="prepend">
-                    <InputGroupText>
-                      <i className="ni ni-single-02" />
-                    </InputGroupText>
-                  </InputGroupAddon>
-                  <Input
-                    placeholder="Username"
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                  />
-                </InputGroup>
-              </FormGroup>
+              <Row>
+                <Col md="6">
+                  <FormGroup>
+                    <InputGroup className="input-group-alternative mb-3">
+                      <InputGroupAddon addonType="prepend">
+                        <InputGroupText>
+                          <i className="ni ni-single-02" />
+                        </InputGroupText>
+                      </InputGroupAddon>
+                      <Input
+                        placeholder="Your name"
+                        type="text"
+                        value={yourName}
+                        onChange={(e) => setYourName(e.target.value)}
+                      />
+                    </InputGroup>
+                  </FormGroup>
+                </Col>
+                <Col md="6">
+                  <FormGroup>
+                    <InputGroup className="input-group-alternative mb-3">
+                      <InputGroupAddon addonType="prepend">
+                        <InputGroupText>
+                          <i className="ni ni-calendar-grid-58" />
+                        </InputGroupText>
+                      </InputGroupAddon>
+                      <Input
+                        placeholder="Birthdate"
+                        type="date"
+                        value={birthDay}
+                        onChange={(e) => setBirthdate(e.target.value)}
+                      />
+                    </InputGroup>
+                  </FormGroup>
+                </Col>
+              </Row>
+
               <FormGroup>
                 <InputGroup className="input-group-alternative mb-3">
                   <InputGroupAddon addonType="prepend">

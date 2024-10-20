@@ -20,9 +20,9 @@
 // import Maps from "views/pages/Maps.js";
 // import Tables from "views/pages/Tables.js";
 // import Icons from "views/pages/Icons.js";
-// import DevicesPage from "views/pages/Devices";
-// import HomeManagement from "views/pages/Homes";
-import RobotManagement from "views/pages/RobotsPage";
+import CreateFundOrProject from "views/pages/Devices";
+import HomeManagement from "views/pages/Homes";
+import ProejctManagement from "views/pages/RobotsPage";
 import Register from "views/pages/Register.js";
 import Login from "views/pages/Login.js";
 
@@ -30,29 +30,29 @@ import RobotDetail from "views/pages/RobotsPage/components/RobotDetail";
 import HomePage from "views/pages/HomePage";
 import FundDetail from "views/pages/FundDetail";
 import ProjectList from "views/pages/ProjectList";
-var routes = [
-  // {
-  //   path: "/index",
-  //   name: "Dashboard",
-  //   icon: "ni ni-tv-2 text-primary",
-  //   component: <Index />,
-  //   layout: "/admin",
-  // },
 
-  // {
-  //   path: "/home-management",
-  //   name: "Home",
-  //   icon: "bi bi-house",
-  //   component: <HomeManagement />,
-  //   layout: "/admin",
-  // },
+var routes = [
   {
-    path: "robot-management",
-    name: "Robot Management",
+    path: "home-management",
+    name: "Home",
+    icon: "bi bi-house",
+    component: <HomeManagement />,
+    layout: "/admin",
+  },
+  {
+    path: "tao-du-an",
+    name: "Tạo Quỹ và Dự án",
+    icon: "bi bi-hdd-stack",
+    component: <CreateFundOrProject />,
+    layout: "/admin",
+  },
+  {
+    path: "project-management",
+    name: "Project Management",
     icon: "ni ni-controller",
-    childPath: ":robotId",
+    childPath: ":projectId",
     childComponent: <RobotDetail />,
-    component: <RobotManagement />,
+    component: <ProejctManagement />,
     layout: "/admin",
   },
   // {
@@ -84,7 +84,7 @@ var routes = [
     layout: "/auth",
   },
   {
-    path: "/du-an/:fundName",
+    path: "/du-an/:prjectName/:projectId",
     name: "FundDetail",
     //icon: "ni ni-bullet-list-67 text-red",
     component: <FundDetail />,

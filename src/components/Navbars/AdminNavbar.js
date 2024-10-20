@@ -58,29 +58,31 @@ function stringToColor(string) {
 
   return color;
 }
-function stringAvatar(username) {
+function stringAvatar(name) {
+  console.log("🚀 ~ stringAvatar ~ name:", name);
   return {
     sx: {
-      bgcolor: stringToColor(username),
+      bgcolor: stringToColor(name),
     },
-    children: username[0].toUpperCase(),
+    children: name[0].toUpperCase(),
   };
 }
 
 const AdminNavbar = (props) => {
-  let username = localStorage.getItem("username");
+  let { email, name } = JSON.parse(localStorage.getItem("userInfo"));
   const navigate = useNavigate();
 
   const logOut = async () => {
     const accessToken = localStorage.getItem("accessToken");
     if (accessToken) {
       const response = await logout(accessToken);
+      console.log("🚀 ~ logOut ~ response:", response);
       const { data } = response;
-      if (data.success) {
+      if (data.statusCode === 200) {
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
-        localStorage.removeItem("username");
-        navigate("/auth/login");
+        localStorage.removeItem("userInfo");
+        navigate("/");
       }
     }
   };
@@ -111,14 +113,14 @@ const AdminNavbar = (props) => {
             <UncontrolledDropdown nav>
               <DropdownToggle className="p-1  custom-border-box" nav>
                 <Media className="align-items-center">
-                  <Avatar {...stringAvatar(username)} />
+                  <Avatar {...stringAvatar(name)} />
                   {/* <Avatar
                     alt="Remy Sharp"
                     src="http://localhost:3000/images/uploads/avatar.jpg"
                   /> */}
                   <Media className="ml-2 d-none d-lg-block">
                     <span className="mb-0 text-sm font-weight-bold">
-                      {username}
+                      {name}
                     </span>
                   </Media>
                 </Media>
@@ -131,17 +133,17 @@ const AdminNavbar = (props) => {
                   <i className="ni ni-single-02" />
                   <span>My profile</span>
                 </DropdownItem>
-                <DropdownItem to="/admin/user-profile" tag={Link}>
+                {/* <DropdownItem to="/admin/user-profile" tag={Link}>
                   <i className="ni ni-settings-gear-65" />
                   <span>Settings</span>
-                </DropdownItem>
-                <DropdownItem to="/admin/user-profile" tag={Link}>
+                </DropdownItem> */}
+                {/* <DropdownItem to="/admin/user-profile" tag={Link}>
                   <i className="ni ni-calendar-grid-58" />
                   <span>Activity</span>
-                </DropdownItem>
-                <DropdownItem to="/admin/user-profile" tag={Link}>
+                </DropdownItem> */}
+                <DropdownItem to="/admin/tao-du-an" tag={Link}>
                   <i className="ni ni-support-16" />
-                  <span>Support</span>
+                  <span>Create Fund/Project</span>
                 </DropdownItem>
                 <DropdownItem divider />
                 <DropdownItem href="#pablo" onClick={logOut}>
