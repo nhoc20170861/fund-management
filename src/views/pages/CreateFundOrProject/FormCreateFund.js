@@ -22,7 +22,7 @@ import DescriptionField from "./components/DescriptionField";
 import { createNewFund } from "network/ApiAxios";
 import { ShowToastMessage } from "utils/ShowToastMessage";
 import { getOneUserByEmail } from "network/ApiAxios";
-
+import PreviewIcon from "@mui/icons-material/Preview";
 const StyledChip = styled(Chip)({
   margin: "8px 0",
 });
@@ -208,6 +208,20 @@ const FormCreateFund = (props) => {
         </Box>
       </FormControl>
 
+      <FormControl fullWidth margin="normal">
+        <TextField
+          label="Description"
+          name="description"
+          value={formData.description ?? "Enter the description"}
+          onChange={handleDataFormChange}
+          fullWidth
+          required
+          multiline
+          rows={4}
+          //helperText="Supports Markdown for formatting"
+        />
+      </FormControl>
+
       {/* Logo URL */}
       <FormControl fullWidth margin="normal">
         <Grid container spacing={2}>
@@ -242,18 +256,23 @@ const FormCreateFund = (props) => {
                   height: 60,
                   objectFit: "cover",
                   borderRadius: "5px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                 }}
-              ></div>
+              >
+                <PreviewIcon />
+              </div>
             )}
           </Grid>
         </Grid>
       </FormControl>
 
       {/* Markdown Description Editor */}
-      <DescriptionField
+      {/* <DescriptionField
         description={formData.description}
         setFormData={setFormData}
-      />
+      /> */}
 
       {/* Submit and Reset Buttons */}
       <Grid container spacing={2} sx={{ mt: 2 }}>

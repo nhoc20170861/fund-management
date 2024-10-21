@@ -55,6 +55,7 @@ import {
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import SupportersList from "./components/SupportersList";
+import ReceiverList from "./components/ReceiverList";
 import { getOneProjectDetail } from "network/ApiAxios";
 import { ShowToastMessage } from "utils/ShowToastMessage";
 import { formatAmountVND } from "utils/functions";
@@ -132,7 +133,7 @@ const FundDetail = () => {
 
         const { data } = response;
         console.log("🚀 ~ fetchOneProjectDetail ~ data:", data);
-        if (data.statusCode === 200) {
+        if (data.statusCode === 200 && data?.body?.id) {
           setProjectDetail(data.body || {});
           setIsProjectEnded(dayjs(data.body?.deadline).isBefore(dayjs()));
 
@@ -498,7 +499,21 @@ const FundDetail = () => {
               </span>
             }
           />
+          <Tab
+            label={
+              <span
+                style={{
+                  fontWeight: "bold",
+                  fontSize: "1.1rem",
+                  textTransform: "none",
+                }}
+              >
+                Người nhận tiền
+              </span>
+            }
+          />
         </Tabs>
+
         {loading ? (
           <Typography variant="h5">Loading...</Typography>
         ) : (
@@ -704,6 +719,9 @@ const FundDetail = () => {
               //   </Box>
               // </Box>
             )}
+            {tabIndex === 2 && (
+              <ReceiverList walletAddress={projectDetail.project_hash} />
+            )}
           </>
         )}
       </Card>
@@ -716,6 +734,7 @@ const FundDetail = () => {
         setDonationAmount={setDonationAmount}
         anonymous={anonymous}
         handleAnonymousChange={handleAnonymousChange}
+        projectName={projectDetail?.name || "default"}
       />
       {transactionId && (
         <div>

@@ -21,13 +21,13 @@ const DropdownAction = () => {
         </DropdownToggle>
         <DropdownMenu className="dropdown-menu-arrow" right>
           <DropdownItem href="#pablo" onClick={(e) => e.preventDefault()}>
-            Edit Home Name
+            Fund details
           </DropdownItem>
           <DropdownItem href="#pablo" onClick={(e) => e.preventDefault()}>
             Add Member
           </DropdownItem>
           <DropdownItem href="#pablo" onClick={(e) => e.preventDefault()}>
-            Room Management
+            Add Project
           </DropdownItem>
         </DropdownMenu>
       </UncontrolledDropdown>

@@ -32,11 +32,11 @@ const ProjectList = () => {
 
         // setProjectList(data || []);
         if (data.statusCode === 200 && data.body.length > 0) {
-          ShowToastMessage({
-            title: "Get data",
-            message: "Lấy dữ liệu thành công",
-            type: "success",
-          });
+          // ShowToastMessage({
+          //   title: "Get data",
+          //   message: "Lấy dữ liệu thành công",
+          //   type: "success",
+          // });
           const now = dayjs();
           const active = data?.body.filter((project) =>
             dayjs(project.deadline).isAfter(now)
@@ -68,7 +68,7 @@ const ProjectList = () => {
   };
 
   return (
-    <Box sx={{ width: "100%", typography: "body1" }}>
+    <Box sx={{ width: "100%", padding: "20px" }}>
       {/* Tabs cho danh sách dự án */}
       <Tabs
         value={selectedTab}
@@ -85,9 +85,20 @@ const ProjectList = () => {
       {/* Nội dung cho từng tab */}
       <Box sx={{ mt: 2 }}>
         {selectedTab === 0 && (
-          <Grid container spacing={2}>
+          <Grid container spacing={2} justifyContent="center">
             {activeProjects.map((project, index) => (
-              <Grid item xs={12} sm={6} md={4} key={index}>
+              <Grid
+                item
+                xs={12}
+                sm={6}
+                md={4}
+                key={index}
+                sx={{
+                  flexGrow: activeProjects.length < 3 ? 0 : 1, // Giữ nguyên kích thước khi ít hơn 3 thẻ
+                  maxWidth: activeProjects.length < 3 ? "33%" : "auto", // Giới hạn bề rộng khi có ít hơn 3 thẻ
+                  flexBasis: activeProjects.length < 3 ? "33%" : "auto",
+                }}
+              >
                 {/* Card sẽ chiếm 12/12 trên màn hình nhỏ, 6/12 trên màn hình vừa và 4/12 trên màn hình lớn */}
                 <CardImage {...project} />
               </Grid>
@@ -95,9 +106,20 @@ const ProjectList = () => {
           </Grid>
         )}
         {selectedTab === 1 && (
-          <Grid container spacing={2}>
+          <Grid container spacing={2} justifyContent="center">
             {completedProjects.map((project, index) => (
-              <Grid item xs={12} sm={6} md={4} key={index}>
+              <Grid
+                item
+                xs={12}
+                sm={6}
+                md={4}
+                key={index}
+                sx={{
+                  flexGrow: completedProjects.length < 3 ? 0 : 1, // Giữ nguyên kích thước khi ít hơn 3 thẻ
+                  maxWidth: completedProjects.length < 3 ? "33%" : "auto", // Giới hạn bề rộng khi có ít hơn 3 thẻ
+                  flexBasis: completedProjects.length < 3 ? "33%" : "auto",
+                }}
+              >
                 {/* Card sẽ chiếm 12/12 trên màn hình nhỏ, 6/12 trên màn hình vừa và 4/12 trên màn hình lớn */}
                 <CardImage {...project} />
               </Grid>

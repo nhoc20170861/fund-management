@@ -32,7 +32,7 @@ function App(props) {
       if (prop.layout === _layout) {
         return (
           <Route path={prop.path} element={prop.component} key={key} exact>
-            {prop.path === "robot-management" && (
+            {prop.path === "project-management" && (
               <Route path={prop.childPath} element={prop.childComponent} />
             )}
           </Route>

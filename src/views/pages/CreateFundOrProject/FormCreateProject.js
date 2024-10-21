@@ -25,6 +25,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import DescriptionField from "./components/DescriptionField";
 import { getFundsForOneUser, createNewProject } from "network/ApiAxios";
 import { ShowToastMessage } from "utils/ShowToastMessage";
+import { isValidImageURL } from "utils/functions";
 const fundLabel = {
   children: "Trẻ em",
   healthcare: "Y tế",
@@ -60,10 +61,6 @@ const ProjectForm = () => {
   const [walletConnected, setWalletConnected] = useState(false);
 
   const [imageErrors, setImageErrors] = useState({}); // To track which images are invalid
-
-  const isValidImageURL = (url) => {
-    return /\.(jpg|jpeg|png|gif)$/.test(url);
-  };
 
   // Validate Algorand wallet address
   const validateAlgorandAddress = (address) => {
@@ -493,8 +490,3 @@ const ProjectForm = () => {
 };
 
 export default ProjectForm;
-
-// Helper function to check if URL is a valid image
-const isValidImageURL = (url) => {
-  return /\.(jpg|jpeg|png|webp|avif|gif|svg)$/.test(url);
-};

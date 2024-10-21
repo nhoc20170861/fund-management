@@ -59,6 +59,8 @@
         .navbar-nav {
             .nav-item {
                 margin-right: .5rem;
+                display: flex;
+                align-items: center;
 
                 [data-toggle="dropdown"]::after {
                     transition: $transition-base;

@@ -42,7 +42,7 @@ const CustomTablePagination = styled(TablePagination)({
 });
 
 // Main component
-const SupportersList = (props) => {
+const ReceiverList = (props) => {
   const [supporters, setSupporters] = useState([]); // State to hold supporters data
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(0);
@@ -77,7 +77,7 @@ const SupportersList = (props) => {
       console.log("🚀 ~ fetchSupporters ~ data:", data);
 
       const formattedSupporters = data.transactions
-        .filter((tx) => tx["payment-transaction"].receiver === address)
+        .filter((tx) => tx["payment-transaction"].receiver !== address)
         .map((tx) => {
           const algoAmount = tx["payment-transaction"].amount / 1e6; // Convert microAlgos to Algos
           const vndAmount = algoAmount * rate; // Convert ALGO to VND
@@ -220,4 +220,4 @@ const SupportersList = (props) => {
   );
 };
 
-export default SupportersList;
+export default ReceiverList;

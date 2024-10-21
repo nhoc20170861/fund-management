@@ -8,6 +8,7 @@ import { Box, Tabs, Tab } from "@mui/material";
 import HeaderCustom from "components/Headers/HeaderCustom.js";
 import FormCreateFund from "./FormCreateFund";
 import FormCreateProject from "./FormCreateProject";
+import FormCreateReceiver from "./FormCreateReceiver";
 const CreateFundOrProject = () => {
   const [selectedTab, setSelectedTab] = useState(0);
 
@@ -41,6 +42,10 @@ const CreateFundOrProject = () => {
                 >
                   <Tab label="Tạo Quỹ Từ Thiện" sx={{ fontWeight: "600" }} />
                   <Tab label="Tạo Dự Án" sx={{ fontWeight: "600" }} />
+                  <Tab
+                    label="Thêm người nhận tiền"
+                    sx={{ fontWeight: "600" }}
+                  />
                 </Tabs>
               </CardHeader>
               <CardBody sx={{ paddingTop: "1rem" }}>
@@ -48,6 +53,7 @@ const CreateFundOrProject = () => {
                   {selectedTab === 0 && <FormCreateFund />}
 
                   {selectedTab === 1 && <FormCreateProject />}
+                  {selectedTab === 2 && <FormCreateReceiver />}
                 </div>
               </CardBody>
             </Card>

@@ -13,8 +13,12 @@ import {
 } from "@mui/material";
 import Grid from "@mui/material/Grid2";
 import algosdk from "algosdk";
-import { PeraWalletConnect } from "@perawallet/connect";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy"; // Icon for copy
+
+import QrCodeIcon from "@mui/icons-material/QrCode2"; // Icon for QR Code
+import { QRCodeCanvas } from "qrcode.react"; // Library for generating QR code
+
+import { PeraWalletConnect } from "@perawallet/connect";
 import { ShowToastMessage } from "utils/ShowToastMessage";
 import configs from "configs";
 const peraWallet = new PeraWalletConnect();
@@ -27,6 +31,7 @@ const DonateModal = ({
   open,
   handleCloseModal,
   walletAddress: walletAddressOfProject,
+  projectName,
 }) => {
   const [anonymous, setAnonymous] = useState(false);
   const [donationAmount, setDonationAmount] = useState("");
@@ -34,6 +39,12 @@ const DonateModal = ({
   const [walletConnected, setWalletConnected] = useState(false);
   const [userAddress, setUserAddress] = useState(null);
   const [exchangeRate, setExchangeRate] = useState(0); // Tỷ giá ALGO/VND
+
+  const [openQRModal, setOpenQRModal] = useState(false);
+  // Toggle the QR code modal
+  const toggleQRModal = () => {
+    setOpenQRModal(!openQRModal);
+  };
 
   useEffect(() => {
     // Lấy tỷ giá hối đoái từ CoinGecko API
@@ -177,30 +188,63 @@ const DonateModal = ({
     }
 
     console.log("🚀 ~ sendTransaction ~ usdEquivalent:", usdEquivalent);
+
     const suggestedParams = await algodClient.getTransactionParams().do();
     console.log("Suggested Params:", suggestedParams);
 
+    // Generate transaction group
     const txGroups = await generatePaymentTxns({
       sender: userAddress,
       receiver: fundWalletAddress,
-      amountAlgo: parseInt(usdEquivalent * 1000000, 10),
+      amountAlgo: parseInt(usdEquivalent * 1000000, 10), // Amount in microAlgos
+      noteMessage: new Uint8Array(
+        Buffer.from(`This is a transaction to charity ${projectName}`)
+      ),
     });
+
     console.log("Transaction:", txGroups);
+    // Close the modal after generating the transaction
+    handleCloseModal();
+
     try {
+      // Sign the transaction using Pera Wallet
       const signedTxn = await peraWallet.signTransaction([txGroups]);
-      console.log("Signed Transaction:", signedTxn);
-      handleCloseModal();
-      const { txId } = await algodClient.sendRawTransaction(signedTxn).do();
-      console.log(`txns signed successfully! - txID: ${txId}`);
+
+      // Send the raw signed transaction to the network
+      const { txid } = await algodClient.sendRawTransaction(signedTxn).do();
+
+      // Wait for confirmation of the transaction
+      const result = await algosdk.waitForConfirmation(algodClient, txid, 10);
+      console.log("Transaction confirmed:", result);
+      console.log("Transaction Information:", result.txn.txn);
+      console.log(
+        `Decoded Note: ${Buffer.from(result.txn.txn.note).toString()}`
+      );
+
+      // Prepare the API request to notify the server
+      const apiPayload = {
+        txid: txid, // The transaction ID
+        sender: userAddress, // Sender's wallet address
+        receiver: fundWalletAddress, // Receiver's wallet address
+        amount: parseInt(usdEquivalent * 1000000, 10), // Amount in microAlgos
+        status: "success", // Status of the transaction
+      };
       ShowToastMessage({
         title: "Payment Transaction",
-        message: `Giao dịch thành công! - txID: ${txId}`,
+        message: `Giao dịch thành công!`,
         type: "success",
       });
       // alert("Giao dịch thành công!");
     } catch (error) {
-      console.log("Couldn't sign payment txns", error);
-      alert("Giao dịch thất bại. Vui lòng thử lại.");
+      if (error.message.includes("Confirmation Failed")) {
+        // Handle the case when the user rejects the transaction
+        console.error("Transaction rejected by the user:", error);
+        alert("Giao dịch đã bị hủy! Người dùng đã từ chối xác nhận giao dịch.");
+      } else {
+        // Handle other errors (network issues, etc.)
+        console.error("Error during transaction:", error);
+        alert("Đã xảy ra lỗi trong quá trình giao dịch. Vui lòng thử lại sau.");
+      }
     }
   };
 
@@ -208,7 +252,12 @@ const DonateModal = ({
     navigator.clipboard
       .writeText(fundWalletAddress)
       .then(() => {
-        alert("Đã sao chép địa chỉ ví vào clipboard!"); // Show success message
+        console.log("Đã sao chép địa chỉ ví vào clipboard!"); // Show success message
+        ShowToastMessage({
+          title: "Copied Wallet Address",
+          message: "Địa chỉ ví đã được sao chép vào clipboard!",
+          type: "success",
+        });
       })
       .catch((err) => {
         console.error("Failed to copy: ", err);
@@ -216,152 +265,237 @@ const DonateModal = ({
   };
 
   return (
-    <Modal open={open} onClose={handleCloseModal}>
-      <div
-        style={{
-          padding: "20px",
-          backgroundColor: "#fff",
-          margin: "100px auto",
-          width: "35rem",
-          borderRadius: "10px",
-        }}
-      >
-        <Typography variant="h6" component="h2" gutterBottom>
-          - Địa chỉ ví của Dự án:
-        </Typography>
-        <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-          <Typography
-            variant="h7"
-            component="h2"
-            gutterBottom
+    <>
+      <Modal open={open} onClose={handleCloseModal}>
+        <Box
+          style={{
+            position: "absolute",
+            top: "0%",
+            left: "50%",
+            transform: "translate(-50%, -10%)",
+            padding: "20px",
+            backgroundColor: "#fff",
+            margin: "100px auto",
+            width: "35rem",
+            borderRadius: "10px",
+            maxHeight: "90vh", // Limit the height of the modal to 90% of the viewport height
+            overflowY: "auto", // Enable vertical scrolling if the content overflows
+          }}
+        >
+          {/* Section 1: Wallet Address and QR Code */}
+          <Box
             sx={{
-              wordWrap: "break-word",
-              fontWeight: "bold",
-              width: "80%",
+              padding: "15px",
+              marginBottom: "20px",
+              backgroundColor: "#f9f9f9",
+              borderRadius: "10px",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
             }}
           >
-            {fundWalletAddress}
-            {/* Add an icon button for copying */}
-          </Typography>
-          <Tooltip title="Sao chép địa chỉ ví">
-            <IconButton onClick={copyToClipboard} sx={{ ml: 1 }}>
-              <ContentCopyIcon />
-            </IconButton>
-          </Tooltip>
-        </Box>
-        <Typography variant="h6" component="h2" gutterBottom>
-          - Nhập Thông Tin Ủng Hộ
-        </Typography>
-        <Grid container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
-          <Grid size={6}>
-            <TextField
-              label="Họ và tên"
-              variant="outlined"
-              fullWidth
-              required
-              disabled={anonymous}
-            />
-          </Grid>
-          <Grid size={6}>
-            <TextField
-              label="Số điện thoại"
-              variant="outlined"
-              fullWidth
-              required
-              disabled={anonymous}
-            />
-          </Grid>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Typography variant="h6" component="h2" gutterBottom>
+                Địa chỉ ví của Dự án:
+              </Typography>
+              <div sx={{ display: "flex", justifyContent: "space-between" }}>
+                <Tooltip title="Sao chép địa chỉ ví">
+                  {/* Copy button */}
+                  <IconButton onClick={copyToClipboard} sx={{ ml: 1 }}>
+                    <ContentCopyIcon />
+                  </IconButton>
+                </Tooltip>
+                {/* Show QR code button */}
+                <Tooltip title="Hiển thị mã QR">
+                  <IconButton onClick={toggleQRModal} sx={{ ml: 1 }}>
+                    <QrCodeIcon />
+                  </IconButton>
+                </Tooltip>
+              </div>
+            </Box>
+            <Typography
+              variant="h7"
+              component="h2"
+              gutterBottom
+              sx={{
+                wordWrap: "break-word",
+                fontWeight: "bold",
+                width: "100%",
+              }}
+            >
+              {fundWalletAddress}
+              {/* Add an icon button for copying */}
+            </Typography>
+          </Box>
 
-          <Grid size={6}>
-            <TextField
-              label="Địa chỉ"
-              variant="outlined"
-              fullWidth
-              required
-              disabled={anonymous}
-            />
-          </Grid>
-          <Grid size={6}>
-            <TextField
-              label="Địa chỉ Email"
-              variant="outlined"
-              fullWidth
-              required
-              disabled={anonymous}
-            />
-          </Grid>
-        </Grid>
-
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={anonymous}
-              onChange={handleAnonymousChange}
-              name="anonymous"
-            />
-          }
-          label="Ủng hộ ẩn danh"
-        />
-
-        {/* TextField nhập tiền VND */}
-        <TextField
-          label="Số tiền quyên góp (VND)"
-          variant="outlined"
-          fullWidth
-          margin="normal"
-          value={donationAmount}
-          onChange={handleDonationChange}
-          helperText={"Ví dụ số tiền: 50.000"}
-          required
-          InputProps={{
-            endAdornment: <InputAdornment position="end">đ</InputAdornment>,
-          }}
-        />
-
-        {/* Hiển thị số tiền ALGO tương ứng */}
-        {usdEquivalent && (
-          <Typography variant="body2" color="textSecondary" gutterBottom>
-            Số tiền tương ứng: {usdEquivalent} ALGO
-          </Typography>
-        )}
-
-        {/* Kết nối ví */}
-        {walletConnected && (
-          <Typography
-            variant="body2"
-            color="green"
-            gutterBottom
-            sx={{ wordWrap: "break-word" }}
+          {/* Section 2: Donation Form */}
+          <Box
+            sx={{
+              padding: "20px",
+              backgroundColor: "#f3f4f6",
+              borderRadius: "10px",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+            }}
           >
-            Ví đã kết nối: {userAddress}
-          </Typography>
-        )}
-        <Button
-          variant="contained"
-          color={walletConnected ? "secondary" : "success"}
-          fullWidth
-          onClick={!!userAddress ? handleDisconnectWallet : connectWallet}
-        >
-          {!!userAddress ? "huỷ kết nôi" : "Kết nối Pera Wallet"}
-        </Button>
+            <Typography variant="h6" component="h2" gutterBottom>
+              Nhập Thông Tin Ủng Hộ
+            </Typography>
+            <Grid
+              container
+              rowSpacing={1}
+              columnSpacing={{ xs: 1, sm: 2, md: 3 }}
+            >
+              <Grid size={6}>
+                <TextField
+                  label="Họ và tên"
+                  variant="outlined"
+                  fullWidth
+                  required
+                  disabled={anonymous}
+                />
+              </Grid>
+              <Grid size={6}>
+                <TextField
+                  label="Số điện thoại"
+                  variant="outlined"
+                  fullWidth
+                  required
+                  disabled={anonymous}
+                />
+              </Grid>
 
-        {/* Gửi giao dịch */}
-        <Button
-          variant="contained"
-          color="primary"
-          fullWidth
-          onClick={sendTransaction}
-          sx={{ mt: 2 }}
+              <Grid size={6}>
+                <TextField
+                  label="Địa chỉ"
+                  variant="outlined"
+                  fullWidth
+                  required
+                  disabled={anonymous}
+                />
+              </Grid>
+              <Grid size={6}>
+                <TextField
+                  label="Địa chỉ Email"
+                  variant="outlined"
+                  fullWidth
+                  required
+                  disabled={anonymous}
+                />
+              </Grid>
+            </Grid>
+
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={anonymous}
+                  onChange={handleAnonymousChange}
+                  name="anonymous"
+                />
+              }
+              label="Ủng hộ ẩn danh"
+            />
+
+            {/* TextField nhập tiền VND */}
+            <TextField
+              label="Số tiền quyên góp (VND)"
+              variant="outlined"
+              fullWidth
+              margin="normal"
+              value={donationAmount}
+              onChange={handleDonationChange}
+              helperText={"Ví dụ số tiền: 50.000"}
+              required
+              InputProps={{
+                endAdornment: <InputAdornment position="end">đ</InputAdornment>,
+              }}
+            />
+
+            {/* Hiển thị số tiền ALGO tương ứng */}
+            {usdEquivalent && (
+              <Typography variant="body2" color="textSecondary" gutterBottom>
+                Số tiền tương ứng: {usdEquivalent} ALGO
+              </Typography>
+            )}
+
+            {/* Kết nối ví */}
+            {walletConnected && (
+              <Typography
+                variant="body2"
+                color="green"
+                gutterBottom
+                sx={{ wordWrap: "break-word" }}
+              >
+                Ví đã kết nối: {userAddress}
+              </Typography>
+            )}
+            <Button
+              variant="contained"
+              color={walletConnected ? "secondary" : "success"}
+              fullWidth
+              onClick={!!userAddress ? handleDisconnectWallet : connectWallet}
+            >
+              {!!userAddress ? "huỷ kết nôi" : "Kết nối Pera Wallet"}
+            </Button>
+
+            {/* Gửi giao dịch */}
+            <Button
+              variant="contained"
+              color="primary"
+              fullWidth
+              onClick={sendTransaction}
+              sx={{ mt: 2 }}
+            >
+              Gửi Thông Tin
+            </Button>
+          </Box>
+        </Box>
+      </Modal>
+      {/* Modal to show the QR Code */}
+      <Modal
+        open={openQRModal}
+        onClose={toggleQRModal}
+        aria-labelledby="qr-code-modal-title"
+        aria-describedby="qr-code-modal-description"
+      >
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: 300,
+            bgcolor: "background.paper",
+            borderRadius: 2,
+            boxShadow: 24,
+            p: 4,
+            textAlign: "center",
+          }}
         >
-          Gửi Thông Tin
-        </Button>
-      </div>
-    </Modal>
+          <Typography id="qr-code-modal-title" variant="h6" component="h2">
+            Mã QR địa chỉ Ví
+          </Typography>
+          <QRCodeCanvas value={fundWalletAddress} size={200} />{" "}
+          {/* Generate QR code */}
+          <Button variant="contained" onClick={toggleQRModal} sx={{ mt: 2 }}>
+            Đóng
+          </Button>
+        </Box>
+      </Modal>
+    </>
   );
 };
 
 export default DonateModal;
-async function generatePaymentTxns({ receiver, sender, amountAlgo }) {
+async function generatePaymentTxns({
+  receiver,
+  sender,
+  amountAlgo,
+  noteMessage = new Uint8Array(Buffer.from("This is a transaction to charity")),
+}) {
   const suggestedParams = await algodClient.getTransactionParams().do();
 
   const txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
@@ -369,6 +503,7 @@ async function generatePaymentTxns({ receiver, sender, amountAlgo }) {
     receiver,
     amount: amountAlgo || 1,
     suggestedParams,
+    note: noteMessage,
   });
 
   return [{ txn, signers: [sender] }];

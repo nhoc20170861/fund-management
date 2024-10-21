@@ -1,368 +1,433 @@
-/*!
-
-=========================================================
-* Argon Dashboard React-v1.2.3
-=========================================================
-
-* Product Page: https://www.creative-tim.com/product/argon-dashboard-react
-* Copyright 2023 Creative Tim (https://www.creative-tim.com)
-* Licensed under MIT (https://github.com/creativetimofficial/argon-dashboard-react/blob/master/LICENSE.md)
-
-* Coded by Creative Tim
-
-=========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-*/
-import { useState } from "react";
-// react component that copies the given text inside your clipboard
-
-// reactstrap components
+import { useState, useEffect } from "react";
 import {
   Card,
   CardHeader,
   CardBody,
   Container,
   Col,
-  UncontrolledTooltip,
-  Button,
-  Badge,
   CardFooter,
   Media,
   Pagination,
   PaginationItem,
   PaginationLink,
-  Progress,
   Table,
   Row,
+  Button,
+  CardTitle,
 } from "reactstrap";
-// core components
+import dayjs from "dayjs";
 import HeaderCustom from "components/Headers/HeaderCustom.js";
-import CreateNewHome from "components/Modals/CreateNewHome";
-import AvatarGroup from "./components/AvatarGroup";
-import DropdownAction from "./components/DropdownAction";
-import { getAll } from "network/ApiAxios";
 
-const RenderHomeLists = () => {
+import MemberList from "./components/MemberList";
+import DropdownAction from "./components/DropdownAction";
+import { getFundsForOneUser, getAllUsers } from "network/ApiAxios";
+
+const RenderFundList = ({ funds, users, currentPage, rowsPerPage }) => {
+  // Calculate the starting index of the items for the current page
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const selectedFunds = funds.slice(startIndex, startIndex + rowsPerPage);
+
   return (
-    <tr>
-      <th scope="row">
-        <Media className="align-items-center">
-          <a
-            className="avatar rounded-circle mr-3"
-            href="#pablo"
-            onClick={(e) => e.preventDefault()}
-          >
-            <img alt="..." src={require("assets/img/theme/bootstrap.jpg")} />
-          </a>
-          <Media>
-            <span className="mb-0 text-sm">Argon Design System</span>
-          </Media>
-        </Media>
-      </th>
-      <td>$2,500 USD</td>
-      <td>
-        <Badge color="" className="badge-dot mr-4">
-          <i className="bg-warning" />
-          pending
-        </Badge>
-      </td>
-      <td>
-        <AvatarGroup></AvatarGroup>
-      </td>
-      <td>
-        <div className="d-flex align-items-center">
-          <span className="mr-2">60%</span>
-          <div>
-            <Progress max="100" value="60" barClassName="bg-warning" />
-          </div>
-        </div>
-      </td>
-      <td className="text-right">
-        <DropdownAction></DropdownAction>
-      </td>
-    </tr>
+    <>
+      {selectedFunds.length > 0
+        ? selectedFunds.map((fund, index) => {
+            return (
+              <tr key={index} className="table-fund-row-hover">
+                <th scope="row">
+                  <Media className="align-items-center">
+                    <a
+                      className="avatar rounded-circle mr-3"
+                      href="#pablo"
+                      onClick={(e) => e.preventDefault()}
+                    >
+                      <img
+                        alt="..."
+                        src={
+                          fund.logo ??
+                          "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQcCeoLmM1J-XCZGPTXuOguB7hGsmsvdvjkVQ&s"
+                        }
+                      />
+                    </a>
+                    <Media>
+                      <span className="mb-0 text-sm">{fund.name_fund}</span>
+                    </Media>
+                  </Media>
+                </th>
+                <td>{fund.description}</td>
+
+                <td
+                  style={{
+                    display: "flex",
+                    direction: "row",
+                    justifyContent: "flex-start",
+                  }}
+                >
+                  <MemberList users={users} members={fund.members}></MemberList>
+                </td>
+                <td>
+                  <div className="d-flex align-items-center">
+                    <span className="mr-2" style={{ fontWeight: "600" }}>
+                      {fund.created_at || ""}
+                    </span>
+                  </div>
+                </td>
+                <td className="text-right">
+                  <DropdownAction></DropdownAction>
+                </td>
+              </tr>
+            );
+          })
+        : null}
+    </>
   );
 };
-const HomeManagement = () => {
-  const homeServices = [
-    {
-      icon: "bi bi-house-add",
-      name: "Create a home",
-      id: "Home" + Math.floor(Math.random() * 16777215).toString(16),
-      tooltip_content: "Select Home",
-      typeModal: "CreateHome",
-    },
-    {
-      icon: "bi bi-houses",
-      name: "Join a home",
-      id: "Home" + Math.floor(Math.random() * 16777215).toString(16),
-      tooltip_content: "Select Home",
-      typeModal: "JoinHome",
-    },
-  ];
-  const [isShowModal, setIsShowModal] = useState(false);
-  const [typeModal, setTypeModal] = useState("Default");
 
-  const toggleModal = (typeModal) => {
-    setIsShowModal(!isShowModal);
-    setTypeModal(typeModal);
+const HomeManagement = () => {
+  const [funds, setFunds] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1); // State to track the current page
+  const rowsPerPage = 5; // Set rows per page to 5
+
+  const [projectListForCurrentUser, setProjectListForCurrentUser] = useState(
+    () => {
+      const projectList = JSON.parse(
+        localStorage.getItem("ProjectListForCurrentUser")
+      );
+
+      return projectList || [];
+    }
+  );
+  const currentUserInfo = JSON.parse(localStorage.getItem("userInfo"));
+
+  useEffect(() => {
+    const fetchAllFundsForThisUser = async () => {
+      const userId = localStorage.getItem("userId");
+      try {
+        const response = await getFundsForOneUser(userId);
+        const { data } = response;
+        setFunds(data.body);
+      } catch (error) {
+        console.log("Error fetching funds:", error);
+      }
+    };
+
+    const fetchAllUser = async () => {
+      try {
+        const response = await getAllUsers();
+        const { data } = response;
+        setUsers(data.body);
+      } catch (error) {
+        console.log("Error fetching users:", error);
+      }
+    };
+
+    fetchAllFundsForThisUser();
+    fetchAllUser();
+  }, []);
+
+  console.log(
+    projectListForCurrentUser.filter(
+      (project) => dayjs(project.deadline).isBefore(dayjs()).length
+    )
+  );
+  // Handle page change
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
   };
+
+  const totalPages = Math.ceil(funds.length / rowsPerPage); // Calculate total pages
+
   return (
     <>
       <HeaderCustom />
-      <CreateNewHome
-        isShowModal={isShowModal}
-        setIsShowModal={setIsShowModal}
-        type={typeModal}
-      >
-        {" "}
-      </CreateNewHome>
-
-      {/* Page content */}
 
       <Container className="mt--7" fluid>
-        {/* Table */}
         <Row>
-          <div className="col">
-            <Card className="shadow">
-              <CardHeader className="bg-transparent">
-                <h3 className="mb-0"> Home Services </h3>
+          <Col className="order-xl-2 mb-5 mb-xl-0" xl="4">
+            <Card className="card-profile shadow">
+              <Row className="justify-content-center">
+                <Col className="order-lg-2" lg="3">
+                  <div className="card-profile-image">
+                    <a href="#pablo" onClick={(e) => e.preventDefault()}>
+                      <img
+                        className="rounded-circle"
+                        alt="..."
+                        src="https://pbs.twimg.com/profile_images/962068712772616196/eYwuB0TO_400x400.jpg"
+                      />
+                    </a>
+                  </div>
+                </Col>
+              </Row>
+              <CardHeader className="text-center border-0 pt-8 pt-md-4 pb-0 pb-md-4">
+                <div className="d-flex justify-content-between">
+                  <Button
+                    className="mr-4"
+                    color="info"
+                    href="#pablo"
+                    onClick={(e) => e.preventDefault()}
+                    size="sm"
+                  >
+                    Edit profile
+                  </Button>
+                  <Button
+                    className="float-right"
+                    color="default"
+                    href="#pablo"
+                    onClick={(e) => e.preventDefault()}
+                    size="sm"
+                  >
+                    Edit Avatar
+                  </Button>
+                </div>
               </CardHeader>
-              <CardBody>
-                <Row className="icon-examples">
-                  {homeServices.map((device, index) => {
-                    return (
-                      <Col lg="3" md="6">
-                        <Button
-                          className="btn-icon-clipboard"
-                          data-placement="top"
-                          id={device.id}
-                          type="button"
-                          onClick={() => toggleModal(device.typeModal)}
-                        >
-                          <div key={index}>
-                            <i className={device.icon} />
-                            <span> {device.name} </span>
-                          </div>
-                        </Button>
-                        {/* <UncontrolledTooltip
-                          delay={0}
-                          trigger="hover"
-                          target={device.id}
-                        >
-                          {device.tooltip_content}
-                        </UncontrolledTooltip> */}
-                      </Col>
-                    );
-                  })}
-                </Row>
-                <Row className="icon-examples">
-                  <Col lg="3" md="6">
-                    <Button
-                      className="btn-icon-clipboard"
-                      data-placement="top"
-                      type="button"
-                      onClick={() => getAll()}
-                    >
+              <CardBody className="pt-0 pt-md-4">
+                <Row>
+                  <div className="col">
+                    <div className="card-profile-stats d-flex justify-content-center mt-md-5">
                       <div>
-                        <i className="bi bi-house" />
-                        <span> test </span>
+                        <span className="heading">{funds.length}</span>
+                        <span className="description">Funds</span>
                       </div>
-                    </Button>
-                  </Col>
+                      <div>
+                        <span className="heading">
+                          {projectListForCurrentUser.length}
+                        </span>
+                        <span className="description">Projects</span>
+                      </div>
+                      <div>
+                        <span className="heading">10 ⭐</span>
+                        <span className="description">Stars</span>
+                      </div>
+                    </div>
+                  </div>
                 </Row>
+                <div className="text-center">
+                  <h3>{currentUserInfo.name}</h3>
+                  <div className="h5 font-weight-300">
+                    <i className="ni location_pin mr-2" />
+                    {currentUserInfo.email}
+                  </div>
+                </div>
               </CardBody>
             </Card>
-          </div>
+          </Col>
+          <Col className="order-xl-1  mb-5 mb-xl-0" xl="8">
+            <Card className="bg-secondary shadow">
+              <CardHeader className="text-center border-0 pt-8 pt-md-2 pb-0 pb-md-4"></CardHeader>
+              <CardBody className="pt-0 pt-md-4">
+                <Container fluid>
+                  {/* Card stats */}
+                  <Row>
+                    <Col md="6">
+                      <Card className="card-stats mb-4 mb-xl-0">
+                        <CardBody>
+                          <Row>
+                            <div className="col">
+                              <CardTitle
+                                tag="h5"
+                                className="text-uppercase text-muted mb-0"
+                              >
+                                completed projects
+                              </CardTitle>
+                              <span className="h2 font-weight-bold mb-0">
+                                {
+                                  projectListForCurrentUser.filter(
+                                    (project) => {
+                                      const currentDate = new Date();
+                                      return (
+                                        currentDate > new Date(project.deadline)
+                                      );
+                                    }
+                                  ).length
+                                }
+                              </span>
+                            </div>
+                            <Col className="col-auto">
+                              <div className="icon icon-shape bg-danger text-white rounded-circle shadow">
+                                <i className="fas fa-chart-bar" />
+                              </div>
+                            </Col>
+                          </Row>
+                          <p className="mt-3 mb-0 text-muted text-sm">
+                            <span className="text-success mr-2">
+                              <i className="fa fa-arrow-up" /> 3.48%
+                            </span>{" "}
+                            <span className="text-nowrap">
+                              Since last month
+                            </span>
+                          </p>
+                        </CardBody>
+                      </Card>
+                    </Col>
+                    <Col md="6">
+                      <Card className="card-stats mb-4 mb-xl-0">
+                        <CardBody>
+                          <Row>
+                            <div className="col">
+                              <CardTitle
+                                tag="h5"
+                                className="text-uppercase text-muted mb-0"
+                              >
+                                Projects in Progress
+                              </CardTitle>
+                              <span className="h2 font-weight-bold mb-0">
+                                {
+                                  projectListForCurrentUser.filter(
+                                    (project) => {
+                                      const currentDate = new Date();
+                                      return (
+                                        currentDate < new Date(project.deadline)
+                                      );
+                                    }
+                                  ).length
+                                }
+                              </span>
+                            </div>
+                            <Col className="col-auto">
+                              <div className="icon icon-shape bg-warning text-white rounded-circle shadow">
+                                <i className="fas fa-chart-pie" />
+                              </div>
+                            </Col>
+                          </Row>
+                          <p className="mt-3 mb-0 text-muted text-sm">
+                            <span className="text-danger mr-2">
+                              <i className="fas fa-arrow-down" /> 3.48%
+                            </span>{" "}
+                            <span className="text-nowrap">Since last week</span>
+                          </p>
+                        </CardBody>
+                      </Card>
+                    </Col>
+                  </Row>
+                  {/* <Row className="mt-3">
+                    <Col md="6">
+                      <Card className="card-stats mb-4 mb-xl-0">
+                        <CardBody>
+                          <Row>
+                            <div className="col">
+                              <CardTitle
+                                tag="h5"
+                                className="text-uppercase text-muted mb-0"
+                              >
+                                Sales
+                              </CardTitle>
+                              <span className="h2 font-weight-bold mb-0">
+                                924
+                              </span>
+                            </div>
+                            <Col className="col-auto">
+                              <div className="icon icon-shape bg-yellow text-white rounded-circle shadow">
+                                <i className="fas fa-users" />
+                              </div>
+                            </Col>
+                          </Row>
+                          <p className="mt-3 mb-0 text-muted text-sm">
+                            <span className="text-warning mr-2">
+                              <i className="fas fa-arrow-down" /> 1.10%
+                            </span>{" "}
+                            <span className="text-nowrap">Since yesterday</span>
+                          </p>
+                        </CardBody>
+                      </Card>
+                    </Col>
+                    <Col md="6">
+                      <Card className="card-stats mb-4 mb-xl-0">
+                        <CardBody>
+                          <Row>
+                            <div className="col">
+                              <CardTitle
+                                tag="h5"
+                                className="text-uppercase text-muted mb-0"
+                              >
+                                Performance
+                              </CardTitle>
+                              <span className="h2 font-weight-bold mb-0">
+                                49,65%
+                              </span>
+                            </div>
+                            <Col className="col-auto">
+                              <div className="icon icon-shape bg-info text-white rounded-circle shadow">
+                                <i className="fas fa-percent" />
+                              </div>
+                            </Col>
+                          </Row>
+                          <p className="mt-3 mb-0 text-muted text-sm">
+                            <span className="text-success mr-2">
+                              <i className="fas fa-arrow-up" /> 12%
+                            </span>{" "}
+                            <span className="text-nowrap">
+                              Since last month
+                            </span>
+                          </p>
+                        </CardBody>
+                      </Card>
+                    </Col>
+                  </Row> */}
+                </Container>
+              </CardBody>
+            </Card>
+          </Col>
         </Row>
+
         <Row className="mt-5">
           <Col>
             <Card className="shadow">
               <CardHeader className="border-0">
-                <h3 className="mb-0"> Home Lists </h3>
+                <h3 className="mb-0">Fund Lists</h3>
               </CardHeader>
               <Table className="align-items-center table-flush" responsive>
                 <thead className="thead-light">
-                  <tr>
-                    <th scope="col"> Home Name </th>
-                    <th scope="col"> Room Management </th>
-                    <th scope="col"> Home Owner </th>
-                    <th scope="col"> Home Member </th>
-                    <th scope="col"> location </th>
+                  <tr className="fund-table">
+                    <th scope="col" className="fund-name">
+                      Fund Name
+                    </th>
+                    <th scope="col" className="fund-description">
+                      Fund Description
+                    </th>
+                    <th scope="col" className="fund-member">
+                      Fund Member
+                    </th>
+                    <th scope="col" className="created-at">
+                      Created At
+                    </th>
                     <th scope="col" />
                   </tr>
                 </thead>
                 <tbody>
-                  <RenderHomeLists />
-                  <tr>
-                    <th scope="row">
-                      <Media className="align-items-center">
-                        <a
-                          className="avatar rounded-circle mr-3"
-                          href="#pablo"
-                          onClick={(e) => e.preventDefault()}
-                        >
-                          <img
-                            alt="..."
-                            src={require("assets/img/theme/angular.jpg")}
-                          />
-                        </a>
-                        <Media>
-                          <span className="mb-0 text-sm">
-                            Angular Now UI Kit PRO
-                          </span>
-                        </Media>
-                      </Media>
-                    </th>
-                    <td> $1, 800 USD </td>
-                    <td>
-                      <Badge color="" className="badge-dot">
-                        <i className="bg-success" />
-                        completed
-                      </Badge>
-                    </td>
-                    <td>
-                      <div className="avatar-group">
-                        <a
-                          className="avatar avatar-sm"
-                          href="#pablo"
-                          id="tooltip746418347"
-                          onClick={(e) => e.preventDefault()}
-                        >
-                          <img
-                            alt="..."
-                            className="rounded-circle"
-                            src={require("assets/img/theme/team-1-800x800.jpg")}
-                          />
-                        </a>
-                        <UncontrolledTooltip
-                          delay={0}
-                          target="tooltip746418347"
-                        >
-                          Ryan Tompson
-                        </UncontrolledTooltip>
-                        <a
-                          className="avatar avatar-sm"
-                          href="#pablo"
-                          id="tooltip102182364"
-                          onClick={(e) => e.preventDefault()}
-                        >
-                          <img
-                            alt="..."
-                            className="rounded-circle"
-                            src={require("assets/img/theme/team-2-800x800.jpg")}
-                          />
-                        </a>
-                        <UncontrolledTooltip
-                          delay={0}
-                          target="tooltip102182364"
-                        >
-                          Romina Hadid
-                        </UncontrolledTooltip>
-                        <a
-                          className="avatar avatar-sm"
-                          href="#pablo"
-                          id="tooltip406489510"
-                          onClick={(e) => e.preventDefault()}
-                        >
-                          <img
-                            alt="..."
-                            className="rounded-circle"
-                            src={require("assets/img/theme/team-3-800x800.jpg")}
-                          />
-                        </a>
-                        <UncontrolledTooltip
-                          delay={0}
-                          target="tooltip406489510"
-                        >
-                          Alexander Smith
-                        </UncontrolledTooltip>
-                        <a
-                          className="avatar avatar-sm"
-                          href="#pablo"
-                          id="tooltip476840018"
-                          onClick={(e) => e.preventDefault()}
-                        >
-                          <img
-                            alt="..."
-                            className="rounded-circle"
-                            src={require("assets/img/theme/team-4-800x800.jpg")}
-                          />
-                        </a>
-                        <UncontrolledTooltip
-                          delay={0}
-                          target="tooltip476840018"
-                        >
-                          Jessica Doe
-                        </UncontrolledTooltip>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="d-flex align-items-center">
-                        <span className="mr-2"> 100 % </span>
-                        <div>
-                          <Progress
-                            max="100"
-                            value="100"
-                            barClassName="bg-success"
-                          />
-                        </div>
-                      </div>
-                    </td>
-                    <td className="text-right"></td>
-                  </tr>
+                  <RenderFundList
+                    funds={funds}
+                    users={users}
+                    currentPage={currentPage}
+                    rowsPerPage={rowsPerPage}
+                  />
                 </tbody>
               </Table>
               <CardFooter className="py-4">
                 <nav aria-label="...">
-                  <Pagination
-                    className="pagination justify-content-end mb-0"
-                    listClassName="justify-content-end mb-0"
-                  >
-                    <PaginationItem className="disabled">
+                  <Pagination className="pagination justify-content-end mb-0">
+                    {/* Render Previous Button */}
+                    <PaginationItem disabled={currentPage === 1}>
                       <PaginationLink
-                        href="#pablo"
-                        onClick={(e) => e.preventDefault()}
-                        tabIndex="-1"
-                      >
-                        <i className="fas fa-angle-left" />
-                        <span className="sr-only"> Previous </span>
-                      </PaginationLink>
+                        previous
+                        onClick={() => handlePageChange(currentPage - 1)}
+                      />
                     </PaginationItem>
-                    <PaginationItem className="active">
+
+                    {/* Render Pagination Numbers */}
+                    {[...Array(totalPages)].map((_, i) => (
+                      <PaginationItem key={i} active={i + 1 === currentPage}>
+                        <PaginationLink onClick={() => handlePageChange(i + 1)}>
+                          {i + 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+
+                    {/* Render Next Button */}
+                    <PaginationItem disabled={currentPage === totalPages}>
                       <PaginationLink
-                        href="#pablo"
-                        onClick={(e) => e.preventDefault()}
-                      >
-                        1
-                      </PaginationLink>
-                    </PaginationItem>
-                    <PaginationItem>
-                      <PaginationLink
-                        href="#pablo"
-                        onClick={(e) => e.preventDefault()}
-                      >
-                        2 <span className="sr-only"> (current) </span>
-                      </PaginationLink>
-                    </PaginationItem>
-                    <PaginationItem>
-                      <PaginationLink
-                        href="#pablo"
-                        onClick={(e) => e.preventDefault()}
-                      >
-                        3
-                      </PaginationLink>
-                    </PaginationItem>
-                    <PaginationItem>
-                      <PaginationLink
-                        href="#pablo"
-                        onClick={(e) => e.preventDefault()}
-                      >
-                        <i className="fas fa-angle-right" />
-                        <span className="sr-only"> Next </span>
-                      </PaginationLink>
+                        next
+                        onClick={() => handlePageChange(currentPage + 1)}
+                      />
                     </PaginationItem>
                   </Pagination>
                 </nav>

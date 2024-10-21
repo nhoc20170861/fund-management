@@ -56,9 +56,19 @@ const Login = (props) => {
           JSON.stringify({
             email: data.body.email,
             name: data.body.name,
+            birthday: data.body.birthday,
           })
         );
+
         localStorage.setItem("userId", data.body.id);
+        localStorage.setItem(
+          "ProjectListForCurrentUser",
+          JSON.stringify(data.body.projects)
+        );
+        // localStorage.setItem(
+        //   "FundListForCurrentUser",
+        //   JSON.stringify(data.body.funds)
+        // );
 
         navigate("/admin/tao-du-an", { replace: true });
       } else {

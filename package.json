@@ -65,6 +65,7 @@
     "js-sha512": "^0.8.0",
     "moment": "2.29.4",
     "nouislider": "15.4.0",
+    "qrcode.react": "^4.0.1",
     "react": ">=16.0.0",
     "react-bootstrap": "^2.7.4",
     "react-chartjs-2": "2.11.2",
@@ -100,9 +101,9 @@
   },
   "devDependencies": {
     "ajv": "^8.17.1",
-    "react-meta-tags": "^1.0.1",
+    "cross-env": "^7.0.3",
     "gulp": "4.0.2",
     "gulp-append-prepend": "1.0.9",
-    "cross-env": "^7.0.3"
+    "react-meta-tags": "^1.0.1"
   }
 }

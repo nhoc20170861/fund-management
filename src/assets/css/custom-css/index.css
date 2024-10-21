@@ -17,9 +17,23 @@
   z-index: 1000;
 }
 
-.pera-wallet-sign-txn-toast {
-  z-index: 999 !important;
-  top: 10% !important;
-  right: 10% !important;
-  position: absolute !important;
+.table-fund-row-hover:hover {
+  background-color: #f7fafc; /* Màu nền khi hover */
+  font-size: 18px; /* Kích thước font khi hover */
+}
+
+.fund-table th.fund-name {
+  width: 30%;
+}
+
+.fund-table th.fund-description {
+  width: 35%;
+}
+
+.fund-table th.fund-member {
+  width: 20%;
+}
+
+.fund-table th.created-at {
+  width: 15%;
 }

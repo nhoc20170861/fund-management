@@ -16,12 +16,12 @@
 
 */
 // import Index from "views/Index.js";
-// import Profile from "views/pages/Profile.js";
+import Profile from "views/pages/Profile.js";
 // import Maps from "views/pages/Maps.js";
 // import Tables from "views/pages/Tables.js";
 // import Icons from "views/pages/Icons.js";
 import CreateFundOrProject from "views/pages/CreateFundOrProject";
-import HomeManagement from "views/pages/Homes";
+import UserProfile from "views/pages/Homes";
 import ProejctManagement from "views/pages/ProejctManagement";
 import Register from "views/pages/Register.js";
 import Login from "views/pages/Login.js";
@@ -33,10 +33,10 @@ import ProjectList from "views/pages/ProjectList";
 
 var routes = [
   {
-    path: "home-management",
-    name: "Home",
-    icon: "bi bi-house",
-    component: <HomeManagement />,
+    path: "user-profile",
+    name: "User Profile",
+    icon: "ni ni-single-02 text-yellow",
+    component: <UserProfile />,
     layout: "/admin",
   },
   {
@@ -69,13 +69,7 @@ var routes = [
   //   component: <Maps />,
   //   layout: "/admin",
   // },
-  // {
-  //   path: "/user-profile",
-  //   name: "User Profile",
-  //   icon: "ni ni-single-02 text-yellow",
-  //   component: <Profile />,
-  //   layout: "/admin",
-  // },
+
   // Route cho trang hiển thị danh sách dự án
   {
     path: "/du-an",

@@ -107,13 +107,16 @@ instance.interceptors.response.use(
 );
 
 // ===================== API cho phan user =====================
-export const getAll = async () => await instance.get("/users");
+export const getAllUsers = async () => await instance.get("/users");
 
 export const edit = async (userID, wallet_name, wallet_address) =>
   await instance.put(`/user/${userID}`, { wallet_name, wallet_address });
 
 export const getOneUserByEmail = async (email) =>
-  await instance.get(`/users?email=${email}`, {});
+  await instance.get(`/JSON.parse(projectList) : [];users?email=${email}`, {});
+
+export const addReceiverForOneProject = async (receiver) =>
+  await instance.post("/receivers", { ...receiver });
 
 export const forgotPassword = async (email) =>
   await instance.post("/forgotpassword", { email });
