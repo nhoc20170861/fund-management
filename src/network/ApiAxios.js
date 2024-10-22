@@ -26,6 +26,14 @@ instance.interceptors.request.use(
     ) {
       return config;
     }
+
+  const projectPattern = /\/projects\/\d+\/contributes/;
+  if (projectPattern.test(config.url)) {
+    config.headers['X-Key-SC'] = configs.HASH_KEY;
+    return config;
+  }
+  
+    
     const accessToken = localStorage.getItem("accessToken");
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`;
