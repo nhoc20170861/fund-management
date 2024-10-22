@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Card,
@@ -59,7 +59,13 @@ const CardImage = ({
 }) => {
   const navigate = useNavigate();
 
-  const progress = (currentAmount / targetAmount) * 100;
+  const [progress, setProgress] = React.useState(
+    () => (currentAmount / targetAmount) * 100
+  );
+  useEffect(
+    () => setProgress((currentAmount / targetAmount) * 100),
+    [currentAmount, targetAmount]
+  );
   const isProjectEnded = dayjs(deadline).isBefore(dayjs());
   const formattedDeadline = isProjectEnded
     ? "Dự án đã kết thúc"

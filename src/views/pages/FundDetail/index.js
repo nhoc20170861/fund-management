@@ -128,7 +128,7 @@ const FundDetail = () => {
     const fetchOneProjectDetail = async () => {
       try {
         setLoading(true); // Set loading to true before fetching data
-        await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate loading
+        // await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate loading
         const response = await getOneProjectDetail(projectId);
 
         const { data } = response;

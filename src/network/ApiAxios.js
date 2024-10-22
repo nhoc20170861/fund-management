@@ -27,13 +27,12 @@ instance.interceptors.request.use(
       return config;
     }
 
-  const projectPattern = /\/projects\/\d+\/contributes/;
-  if (projectPattern.test(config.url)) {
-    config.headers['X-Key-SC'] = configs.REACT_APP_HASH_KEY_API;
-    return config;
-  }
-  
-    
+    const projectPattern = /\/projects\/\d+\/contributes/;
+    if (projectPattern.test(config.url)) {
+      config.headers["X-Key-SC"] = configs.REACT_APP_HASH_KEY_API;
+      return config;
+    }
+
     const accessToken = localStorage.getItem("accessToken");
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`;
@@ -97,14 +96,18 @@ instance.interceptors.response.use(
   },
   (error) => {
     // Handle errors
-    if (error.response && error.response.status === 401 && error.response.data.detail === "Token has expired") {
+    if (
+      error.response &&
+      error.response.status === 401 &&
+      error.response.data.detail === "Token has expired"
+    ) {
       console.error("401 Unauthorized error occurred");
 
       // Remove tokens and user data from localStorage
       localStorage.removeItem("accessToken");
       localStorage.removeItem("userInfo");
       localStorage.removeItem("userId");
-      localStorage.removeItem("ProjectListForCurrentUser");
+      localStorage.removeItem("projectListForCurrentUser");
 
       // Redirect to the homepage
       window.location.assign("/login"); // Change to the path you want to redirect to
@@ -166,13 +169,13 @@ export const createNewProject = async (projectDetail) =>
   await instance.post(`/projects`, { ...projectDetail });
 
 export const getProjectDetailByUserAndFundId = async (userId, fundId) =>
-  await instance.get(`/projects/filter/user/${userId}/fund/${fundId}`, { });
-
+  await instance.get(`/projects/filter/user/${userId}/fund/${fundId}`, {});
 
 // ===================== API cho phan contribute =====================
 export const addContributeTranstaction = async (projectId, contributes_trans) =>
-  await instance.post(`/projects/${projectId}/contributions`, { ...contributes_trans});
-
+  await instance.post(`/projects/${projectId}/contributions`, {
+    ...contributes_trans,
+  });
 
 // ===================== API cho phan fund =====================
 export const createNewFund = async (fundDetail) => {
@@ -181,5 +184,3 @@ export const createNewFund = async (fundDetail) => {
 };
 export const getFundsForOneUser = async (userId) =>
   await instance.get(`/funds/user/${userId}`, {});
-
-
