@@ -26,6 +26,14 @@ instance.interceptors.request.use(
     ) {
       return config;
     }
+
+  const projectPattern = /\/projects\/\d+\/contributes/;
+  if (projectPattern.test(config.url)) {
+    config.headers['X-Key-SC'] = configs.HASH_KEY;
+    return config;
+  }
+  
+    
     const accessToken = localStorage.getItem("accessToken");
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`;
@@ -96,6 +104,7 @@ instance.interceptors.response.use(
       localStorage.removeItem("accessToken");
       localStorage.removeItem("userInfo");
       localStorage.removeItem("userId");
+      localStorage.removeItem("ProjectListForCurrentUser");
 
       // Redirect to the homepage
       window.location.assign("/"); // Change to the path you want to redirect to
@@ -156,26 +165,14 @@ export const getOneProjectDetail = async (projectId) =>
 export const createNewProject = async (projectDetail) =>
   await instance.post(`/projects`, { ...projectDetail });
 
-// Api cho phan control a robot
-export const createNewTaskForOneRobot = async (robotId, taskList) =>
-  await instance.post(`ros/robot/${robotId}/create-new-task`, {
-    taskList,
-  });
+export const getProjectDetailByUserAndFundId = async (userId, fundId) =>
+  await instance.get(`/projects/filter/user/${userId}/fund/${fundId}`, { });
 
-export const resetAllGoalsForOneRobot = async (robotId) =>
-  await instance.post(`ros/robot/${robotId}/reset-all-goals`, {});
 
-// api handler state
-export const setStateAccordingToRobotId = async ({ robotId, state }) =>
-  await instance.post(`ros/robot/${robotId}/state/set-state`, { state });
+// ===================== API cho phan contribute =====================
+export const addContributeTranstaction = async (contributes_trans) =>
+  await instance.post(`/projects/${projectId}/contributes`, { ...contributes_trans});
 
-export const callServiceActiveGoalAgain = async ({
-  robotId,
-  activeGoalAgain,
-}) =>
-  await instance.post(`ros/robot/${robotId}/activeGoalAgain`, {
-    activeGoalAgain,
-  });
 
 // ===================== API cho phan fund =====================
 export const createNewFund = async (fundDetail) => {
@@ -185,8 +182,4 @@ export const createNewFund = async (fundDetail) => {
 export const getFundsForOneUser = async (userId) =>
   await instance.get(`/funds/user/${userId}`, {});
 
-// load map config file
-export const getConfigMap = async (fileName) =>
-  await instance.get(`ros/robot/getConfigMap/${fileName}`, {});
-export const getMapList = async () =>
-  await instance.get(`ros/robot/getMapList`, {});
+
