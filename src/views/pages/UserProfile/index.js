@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Card,
   CardHeader,
@@ -13,7 +14,6 @@ import {
   Table,
   Row,
   Button,
-  CardTitle,
   UncontrolledTooltip,
 } from "reactstrap";
 import {
@@ -91,25 +91,20 @@ const RenderFundList = ({ fundList, users, currentPage, rowsPerPage }) => {
 const UserProfile = () => {
   const [users, setUsers] = useState([]);
   const [currentPage, setCurrentPage] = useState(1); // State to track the current page
+  const navigate = useNavigate();
   const rowsPerPage = 5; // Set rows per page to 5
 
-  const handleBtnClick = (key) => {
-    // const url = location.pathname + "/" + key;
-    // console.log("🚀 ~ file: index.js:107 ~ handleBtnClick ~ url:", url);
-    // navigate(url);
-    // setIsShowModal(!isShowModal);
+  const handleBtnClick = (fundId) => {
+    const url = `/admin/fund-detail/${fundId}`;
+    console.log("🚀 ~ file: index.js:107 ~ handleBtnClick ~ url:", url);
+  
+    // Thực hiện điều hướng
+    navigate(url);
   };
-  const [projectListForCurrentUser, setProjectListForCurrentUser] = useState(
-    () => {
-      const projectList = JSON.parse(
-        localStorage.getItem("ProjectListForCurrentUser")
-      );
-
-      return projectList || [];
-    }
-  );
+  const [projectListForCurrentUser, setProjectListForCurrentUser] = useLocalStorage("projectListForCurrentUser", []);
+  
   const currentUserInfo = JSON.parse(localStorage.getItem("userInfo"));
-  const [fundList, setFundList] = useLocalStorage("fundList", []);
+  const [fundList, setFundList] = useLocalStorage("fundListForCurrentUser", []);
 
   useEffect(() => {
     const fetchAllFundsForThisUser = async () => {
@@ -122,14 +117,14 @@ const UserProfile = () => {
         if (data.statusCode !== 200) {
           ShowToastMessage({
             title: "fetchAllFundsForThisUser",
-            message: "Loading funds failed",
+            message: "Cập nhập dữ liệu thất bại",
             type: "error",
           });
           return;
         }
         ShowToastMessage({
           title: "fetchAllFundsForThisUser",
-          message: "funds loaded successfully",
+          message: "Lấy dữ liệu thành công",
           type: "success",
         });
         setFundList(data.body);
@@ -273,7 +268,7 @@ const UserProfile = () => {
                                   <Avatar
                                     alt={index}
                                     src={
-                                      fund.logo ??
+                                      fund.logo ||
                                       "https://images2.thanhnien.vn/528068263637045248/2024/9/9/tham-gia-don-dep-cay-xanh-nga-do-o-ha-noituan-minh-172588565429228770254.jpg"
                                     }
                                     sx={{ width: 50, height: 50 }}

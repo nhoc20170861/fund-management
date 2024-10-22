@@ -40,10 +40,10 @@ const AuthNavbar = () => {
         <Container className="px-4">
           <NavbarBrand to="/" tag={Link}>
             <img
-              style={{ height: "5rem" }}
+              style={{ maxHeight: "3rem" }}
               alt="..."
               src={
-                "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c6/Algorand_logo.svg/1200px-Algorand_logo.svg.png"
+                "https://algorandtechnologies.com/assets/media-kit/logos/full/png/algorand_full_logo_black.png"
               }
             />
           </NavbarBrand>

@@ -1,4 +1,4 @@
-const { REACT_APP_SERVER_DOMAIN_NAME, REACT_APP_APP_DOMAIN_NAME } = process.env;
+const { REACT_APP_SERVER_DOMAIN_NAME, REACT_APP_APP_DOMAIN_NAME, HASH_KEY_API } = process.env;
 const doamin_server =
   process.env.REACT_APP_APP_NODE_ENV === "production"
     ? REACT_APP_SERVER_DOMAIN_NAME
@@ -17,6 +17,7 @@ const configs = {
   DEMO: false,
   ALGORAND_SERVER: algorand_server,
   ALGORAND_SERVER_PORT: process.env.REACT_APP_ALGORAND_SERVER_PORT || 443,
+  HASH_KEY_API
 };
 
 export default configs;

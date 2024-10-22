@@ -85,7 +85,7 @@ const CardGallery = ({ cards }) => {
 const HomePage = (props) => {
   // Danh sách các thẻ card
 
-  const [projectList, setProjectList] = useLocalStorage("projectList", []);
+  const [projectListAll, setProjectListAll] = useLocalStorage("projectListAll", []);
 
   useEffect(() => {
     const fetchAllProjects = async () => {
@@ -95,7 +95,7 @@ const HomePage = (props) => {
         const { data } = response;
         console.log("🚀 ~ fetchAllProjects ~ data:", data);
         if (data.statusCode === 200 && data.body.length > 0) {
-          setProjectList(data.body || []);
+          setProjectListAll(data.body || []);
           // ShowToastMessage({
           //   title: "Get data",
           //   message: "Lấy dữ liệu thành công",
@@ -120,7 +120,7 @@ const HomePage = (props) => {
 
   return (
     <div style={{ padding: "20px", width: "100%" }}>
-      <CardGallery cards={projectList} />
+      <CardGallery cards={projectListAll} />
     </div>
   );
 };

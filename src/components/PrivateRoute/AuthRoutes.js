@@ -10,7 +10,7 @@ const AuthRoutes = ({ children }) => {
     !["/", "/register"].includes(location.pathname) &&
     !location.pathname.startsWith("/du-an");
   if (accessToken && userInfo?.email && userInfo?.name && isProtectedRoute) {
-    return <Navigate to="/admin/tao-du-an" />;
+    return <Navigate to="/admin/user-profile" />;
   }
 
   return children;

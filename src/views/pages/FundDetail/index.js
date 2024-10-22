@@ -735,6 +735,8 @@ const FundDetail = () => {
         anonymous={anonymous}
         handleAnonymousChange={handleAnonymousChange}
         projectName={projectDetail?.name || "default"}
+        projectId={projectId}
+        setProjectDetail={setProjectDetail}
       />
       {transactionId && (
         <div>

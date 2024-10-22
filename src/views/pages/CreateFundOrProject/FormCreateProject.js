@@ -26,7 +26,7 @@ import DescriptionField from "./components/DescriptionField";
 import { getFundsForOneUser, createNewProject } from "network/ApiAxios";
 import { ShowToastMessage } from "utils/ShowToastMessage";
 import { isValidImageURL } from "utils/functions";
-const fundLabel = {
+const projectLable = {
   children: "Trẻ em",
   healthcare: "Y tế",
   education: "Giáo dục",
@@ -371,7 +371,7 @@ const ProjectForm = () => {
               required
               select
             >
-              {Object.entries(fundLabel).map(([key, label]) => (
+              {Object.entries(projectLable).map(([key, label]) => (
                 <MenuItem key={key} value={key}>
                   {label}
                 </MenuItem>

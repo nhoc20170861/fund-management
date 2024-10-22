@@ -16,17 +16,17 @@
 
 */
 // import Index from "views/Index.js";
-import Profile from "views/pages/Profile.js";
+// import Profile from "views/pages/Profile.js";
 // import Maps from "views/pages/Maps.js";
 // import Tables from "views/pages/Tables.js";
 // import Icons from "views/pages/Icons.js";
 import CreateFundOrProject from "views/pages/CreateFundOrProject";
 import UserProfile from "views/pages/UserProfile";
-import ProejctManagement from "views/pages/ProejctManagement";
+import ProjectManagement from "views/pages/ProjectManagement";
 import Register from "views/pages/Register.js";
 import Login from "views/pages/Login.js";
 
-import ProjectDetail from "views/pages/ProejctManagement/components/ProjectDetail";
+import ProjectDetail from "views/pages/ProjectManagement/components/ProjectDetail";
 import HomePage from "views/pages/HomePage";
 import FundDetail from "views/pages/FundDetail";
 import ProjectList from "views/pages/ProjectList";
@@ -47,12 +47,12 @@ var routes = [
     layout: "/admin",
   },
   {
-    path: "project-management",
+    path: "fund-detail/:fundId",
     name: "Project Management",
     icon: "ni ni-controller",
     childPath: ":projectId",
     childComponent: <ProjectDetail />,
-    component: <ProejctManagement />,
+    component: <ProjectManagement />,
     layout: "/admin",
   },
   // {

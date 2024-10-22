@@ -29,7 +29,7 @@ instance.interceptors.request.use(
 
   const projectPattern = /\/projects\/\d+\/contributes/;
   if (projectPattern.test(config.url)) {
-    config.headers['X-Key-SC'] = configs.HASH_KEY;
+    config.headers['X-Key-SC'] = configs.REACT_APP_HASH_KEY_API;
     return config;
   }
   
@@ -97,7 +97,7 @@ instance.interceptors.response.use(
   },
   (error) => {
     // Handle errors
-    if (error.response && error.response.status === 401) {
+    if (error.response && error.response.status === 401 && error.response.data.detail === "Token has expired") {
       console.error("401 Unauthorized error occurred");
 
       // Remove tokens and user data from localStorage
@@ -107,7 +107,7 @@ instance.interceptors.response.use(
       localStorage.removeItem("ProjectListForCurrentUser");
 
       // Redirect to the homepage
-      window.location.assign("/"); // Change to the path you want to redirect to
+      window.location.assign("/login"); // Change to the path you want to redirect to
     }
 
     // Return the error as a rejected promise to propagate the error
@@ -170,8 +170,8 @@ export const getProjectDetailByUserAndFundId = async (userId, fundId) =>
 
 
 // ===================== API cho phan contribute =====================
-export const addContributeTranstaction = async (contributes_trans) =>
-  await instance.post(`/projects/${projectId}/contributes`, { ...contributes_trans});
+export const addContributeTranstaction = async (projectId, contributes_trans) =>
+  await instance.post(`/projects/${projectId}/contributions`, { ...contributes_trans});
 
 
 // ===================== API cho phan fund =====================

@@ -62,7 +62,7 @@ const Login = (props) => {
 
         localStorage.setItem("userId", data.body.id);
         localStorage.setItem(
-          "ProjectListForCurrentUser",
+          "projectListForCurrentUser",
           JSON.stringify(data.body.projects)
         );
         // localStorage.setItem(
@@ -70,13 +70,15 @@ const Login = (props) => {
         //   JSON.stringify(data.body.funds)
         // );
 
-        navigate("/admin/tao-du-an", { replace: true });
+        navigate("/admin/user-profile", { replace: true });
       } else {
         setPassword("");
         setError(data.message);
       }
     } catch (error) {
       console.log("🚀 ~ file: Login.js:61 ~ tryLogin ~ error:", error);
+      setPassword("");
+      setError(error?.response?.data?.body || "Lỗi không xác định");
     }
   };
 

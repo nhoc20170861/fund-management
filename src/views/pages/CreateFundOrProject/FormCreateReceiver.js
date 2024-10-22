@@ -6,20 +6,21 @@ import {
   Box,
   MenuItem,
   FormControl,
-  IconButton,
 } from "@mui/material";
 import Grid from "@mui/material/Grid2";
-import { styled } from "@mui/material/styles";
-import AddIcon from "@mui/icons-material/Add";
-import DeleteIcon from "@mui/icons-material/Delete";
 
 import algosdk from "algosdk";
 import { PeraWalletConnect } from "@perawallet/connect";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 
-import { getFundsForOneUser, addReceiverForOneProject } from "network/ApiAxios";
+import { getProjectDetailByUserAndFundId, addReceiverForOneProject } from "network/ApiAxios";
 import { ShowToastMessage } from "utils/ShowToastMessage";
+import {
+    writeStorage,
+    deleteFromStorage,
+    useLocalStorage,
+} from "@rehooks/local-storage";
 
 const wallet_type = {
   pera: "Pera Wallet",
@@ -37,25 +38,11 @@ const FormCreateReceiver = () => {
     receiver_wallet_address: null,
   });
 
-  const [funds, setFunds] = useState([]); // Fund IDs fetched from server
   const [isValidAddress, setIsValidAddress] = useState(null); // Track address validity
   const [errorMessage, setErrorMessage] = useState("");
   const [walletConnected, setWalletConnected] = useState(false);
 
-  const [projectListForCurrentUser, setProjectListForCurrentUser] = useState(
-    () => {
-      const projectList = localStorage.getItem("ProjectListForCurrentUser");
-
-      return projectList
-        ? JSON.parse(projectList, (key, value) => {
-            if (key === "description") {
-              return undefined; // Omit the 'description' field
-            }
-            return value; // Keep all other fields
-          })
-        : [];
-    }
-  );
+  const [projectListForCurrentUser, setProjectListForCurrentUser] = useLocalStorage("projectListForCurrentUser", []);
 
   // Validate Algorand wallet address
   const validateAlgorandAddress = (address) => {
@@ -72,23 +59,34 @@ const FormCreateReceiver = () => {
       setErrorMessage("Invalid address format.");
     }
   };
-  // useEffect(() => {
-  //   const fetchAllFundsForThisUser = async () => {
-  //     try {
-  //       const userId = localStorage.getItem("userId");
-  //       const response = await getFundsForOneUser(userId);
+  
+  useEffect(() => {
+    const fetchAllProjectByFunds= async () => {
+      try {
+        const userId = localStorage.getItem("userId");
+        const response = await getProjectDetailByUserAndFundId(userId);
 
-  //       const { data } = response;
-  //       setFunds(data.body);
-  //     } catch (error) {
-  //       console.log(
-  //         "🚀 ~ file: index.js:223 ~ fetchAllFundsForThisUser ~ error:",
-  //         error
-  //       );
-  //     }
-  //   };
-  //   fetchAllFundsForThisUser();
-  // }, []);
+        const { data } = response;
+        console.log("🚀 ~ fetchAllProjectByFunds ~ data:", data)
+        
+        if(data.statusCode === 200) {
+            setProjectListForCurrentUser(data.body);
+        } else {
+            ShowToastMessage({
+                title: "get project",
+                message: "Lấy dự án không thành công",
+                type: "error",
+              });
+        }
+      } catch (error) {
+        console.log(
+          "🚀 ~ file: index.js:223 ~ fetchAllProjectByFunds ~ error:",
+          error
+        );
+      }
+    };
+    fetchAllProjectByFunds();
+  }, []);
 
   useEffect(() => {
     const disconnectWallet = async () => {
@@ -126,7 +124,6 @@ const FormCreateReceiver = () => {
   };
 
   const handleFormSubmit = async (e) => {
-    const user_id = localStorage.getItem("userId"); // Get user_id from localStorage
     const finalData = {
       ...formData,
     };
@@ -140,7 +137,7 @@ const FormCreateReceiver = () => {
       // Handle form submission logic here (e.g., send to backend)
 
       try {
-        console.log("Submitted Project Data:", finalData);
+        console.log("Submitted Receiver data:", finalData);
         finalData.project_hash = formData.receiver_wallet_address;
         const response = await addReceiverForOneProject(finalData);
         const { data } = response;
