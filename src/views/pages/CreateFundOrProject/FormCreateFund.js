@@ -67,6 +67,15 @@ const FormCreateFund = (props) => {
     };
     formattedData["user_id"] = localStorage.getItem("userId");
     console.log("Submitting fund data:", formattedData);
+    if (!formattedData.members) {
+      formattedData.members = [];
+    }
+
+    if (!formattedData.logo) {
+      formattedData.logo =
+        "https://pbs.twimg.com/profile_images/962068712772616196/eYwuB0TO_400x400.jpg";
+    }
+
     // You can send this data to your API
     e.preventDefault();
     try {

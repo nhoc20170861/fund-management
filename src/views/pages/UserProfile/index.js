@@ -14,18 +14,24 @@ import {
   Row,
   Button,
   CardTitle,
+  UncontrolledTooltip,
 } from "reactstrap";
-import dayjs from "dayjs";
+import {
+  writeStorage,
+  deleteFromStorage,
+  useLocalStorage,
+} from "@rehooks/local-storage";
+import Avatar from "@mui/material/Avatar";
 import HeaderCustom from "components/Headers/HeaderCustom.js";
-
 import MemberList from "./components/MemberList";
 import DropdownAction from "./components/DropdownAction";
 import { getFundsForOneUser, getAllUsers } from "network/ApiAxios";
+import { ShowToastMessage } from "utils/ShowToastMessage";
 
-const RenderFundList = ({ funds, users, currentPage, rowsPerPage }) => {
+const RenderFundList = ({ fundList, users, currentPage, rowsPerPage }) => {
   // Calculate the starting index of the items for the current page
   const startIndex = (currentPage - 1) * rowsPerPage;
-  const selectedFunds = funds.slice(startIndex, startIndex + rowsPerPage);
+  const selectedFunds = fundList.slice(startIndex, startIndex + rowsPerPage);
 
   return (
     <>
@@ -44,7 +50,7 @@ const RenderFundList = ({ funds, users, currentPage, rowsPerPage }) => {
                         alt="..."
                         src={
                           fund.logo ??
-                          "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQcCeoLmM1J-XCZGPTXuOguB7hGsmsvdvjkVQ&s"
+                          "https://pbs.twimg.com/profile_images/962068712772616196/eYwuB0TO_400x400.jpg"
                         }
                       />
                     </a>
@@ -82,12 +88,17 @@ const RenderFundList = ({ funds, users, currentPage, rowsPerPage }) => {
   );
 };
 
-const HomeManagement = () => {
-  const [funds, setFunds] = useState([]);
+const UserProfile = () => {
   const [users, setUsers] = useState([]);
   const [currentPage, setCurrentPage] = useState(1); // State to track the current page
   const rowsPerPage = 5; // Set rows per page to 5
 
+  const handleBtnClick = (key) => {
+    // const url = location.pathname + "/" + key;
+    // console.log("🚀 ~ file: index.js:107 ~ handleBtnClick ~ url:", url);
+    // navigate(url);
+    // setIsShowModal(!isShowModal);
+  };
   const [projectListForCurrentUser, setProjectListForCurrentUser] = useState(
     () => {
       const projectList = JSON.parse(
@@ -98,16 +109,35 @@ const HomeManagement = () => {
     }
   );
   const currentUserInfo = JSON.parse(localStorage.getItem("userInfo"));
+  const [fundList, setFundList] = useLocalStorage("fundList", []);
 
   useEffect(() => {
     const fetchAllFundsForThisUser = async () => {
-      const userId = localStorage.getItem("userId");
       try {
+        const userId = localStorage.getItem("userId");
         const response = await getFundsForOneUser(userId);
+
         const { data } = response;
-        setFunds(data.body);
+        console.log("🚀 ~ fetchAllFundsForThisUser ~ data:", data);
+        if (data.statusCode !== 200) {
+          ShowToastMessage({
+            title: "fetchAllFundsForThisUser",
+            message: "Loading funds failed",
+            type: "error",
+          });
+          return;
+        }
+        ShowToastMessage({
+          title: "fetchAllFundsForThisUser",
+          message: "funds loaded successfully",
+          type: "success",
+        });
+        setFundList(data.body);
       } catch (error) {
-        console.log("Error fetching funds:", error);
+        console.log(
+          "🚀 ~ file: index.js:223 ~ fetchAllTaskQueue ~ error:",
+          error
+        );
       }
     };
 
@@ -125,17 +155,12 @@ const HomeManagement = () => {
     fetchAllUser();
   }, []);
 
-  console.log(
-    projectListForCurrentUser.filter(
-      (project) => dayjs(project.deadline).isBefore(dayjs()).length
-    )
-  );
   // Handle page change
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
 
-  const totalPages = Math.ceil(funds.length / rowsPerPage); // Calculate total pages
+  const totalPages = Math.ceil(fundList.length / rowsPerPage); // Calculate total pages
 
   return (
     <>
@@ -185,7 +210,7 @@ const HomeManagement = () => {
                   <div className="col">
                     <div className="card-profile-stats d-flex justify-content-center mt-md-5">
                       <div>
-                        <span className="heading">{funds.length}</span>
+                        <span className="heading">{fundList.length}</span>
                         <span className="description">Funds</span>
                       </div>
                       <div>
@@ -211,159 +236,81 @@ const HomeManagement = () => {
               </CardBody>
             </Card>
           </Col>
-          <Col className="order-xl-1  mb-5 mb-xl-0" xl="8">
+          <Col className="order-xl-1 mb-5 mb-xl-0" xl="8">
             <Card className="bg-secondary shadow">
-              <CardHeader className="text-center border-0 pt-8 pt-md-2 pb-0 pb-md-4"></CardHeader>
+              <CardHeader className="text-center border-0 pt-8 pt-md-2 pb-0 pb-md-4">
+                Select to View Fund Details
+              </CardHeader>
               <CardBody className="pt-0 pt-md-4">
-                <Container fluid>
-                  {/* Card stats */}
-                  <Row>
-                    <Col md="6">
-                      <Card className="card-stats mb-4 mb-xl-0">
-                        <CardBody>
-                          <Row>
-                            <div className="col">
-                              <CardTitle
-                                tag="h5"
-                                className="text-uppercase text-muted mb-0"
+                {/* Table */}
+                <Row>
+                  <Col>
+                    <div
+                      style={{
+                        maxHeight: "400px", // Set the maximum height for the container
+                        overflowY: "auto", // Enable vertical scrolling
+                      }}
+                    >
+                      <Row className="icon-examples">
+                        {fundList.map((fund, index) => {
+                          return (
+                            <Col
+                              lg="4"
+                              md="6"
+                              sm="12"
+                              key={index}
+                              className="mb-4"
+                            >
+                              {/* Button for fund */}
+                              <Button
+                                fullWidth
+                                className="custom-border-box"
+                                type="button"
+                                id={`tooltip${index}`}
+                                onClick={() => handleBtnClick(fund.id ?? 1)}
                               >
-                                completed projects
-                              </CardTitle>
-                              <span className="h2 font-weight-bold mb-0">
-                                {
-                                  projectListForCurrentUser.filter(
-                                    (project) => {
-                                      const currentDate = new Date();
-                                      return (
-                                        currentDate > new Date(project.deadline)
-                                      );
+                                <Media className="align-items-center">
+                                  <Avatar
+                                    alt={index}
+                                    src={
+                                      fund.logo ??
+                                      "https://images2.thanhnien.vn/528068263637045248/2024/9/9/tham-gia-don-dep-cay-xanh-nga-do-o-ha-noituan-minh-172588565429228770254.jpg"
                                     }
-                                  ).length
-                                }
-                              </span>
-                            </div>
-                            <Col className="col-auto">
-                              <div className="icon icon-shape bg-danger text-white rounded-circle shadow">
-                                <i className="fas fa-chart-bar" />
-                              </div>
-                            </Col>
-                          </Row>
-                          <p className="mt-3 mb-0 text-muted text-sm">
-                            <span className="text-success mr-2">
-                              <i className="fa fa-arrow-up" /> 3.48%
-                            </span>{" "}
-                            <span className="text-nowrap">
-                              Since last month
-                            </span>
-                          </p>
-                        </CardBody>
-                      </Card>
-                    </Col>
-                    <Col md="6">
-                      <Card className="card-stats mb-4 mb-xl-0">
-                        <CardBody>
-                          <Row>
-                            <div className="col">
-                              <CardTitle
-                                tag="h5"
-                                className="text-uppercase text-muted mb-0"
+                                    sx={{ width: 50, height: 50 }}
+                                  />
+                                  <Media className="pl-2 ml-2 d-none d-lg-block">
+                                    {/* Fund name with ellipsis if it's too long */}
+                                    <span
+                                      className="mb-0 text-sm font-weight-bold"
+                                      style={{
+                                        display: "inline-block",
+                                        maxWidth: "150px", // Adjust this width based on your button size
+                                        whiteSpace: "nowrap",
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                      }}
+                                    >
+                                      {fund.name_fund}
+                                    </span>
+                                  </Media>
+                                </Media>
+                              </Button>
+
+                              {/* Tooltip to show full fund name */}
+                              <UncontrolledTooltip
+                                delay={0}
+                                trigger="hover focus"
+                                target={`tooltip${index}`}
                               >
-                                Projects in Progress
-                              </CardTitle>
-                              <span className="h2 font-weight-bold mb-0">
-                                {
-                                  projectListForCurrentUser.filter(
-                                    (project) => {
-                                      const currentDate = new Date();
-                                      return (
-                                        currentDate < new Date(project.deadline)
-                                      );
-                                    }
-                                  ).length
-                                }
-                              </span>
-                            </div>
-                            <Col className="col-auto">
-                              <div className="icon icon-shape bg-warning text-white rounded-circle shadow">
-                                <i className="fas fa-chart-pie" />
-                              </div>
+                                {fund.name_fund}
+                              </UncontrolledTooltip>
                             </Col>
-                          </Row>
-                          <p className="mt-3 mb-0 text-muted text-sm">
-                            <span className="text-danger mr-2">
-                              <i className="fas fa-arrow-down" /> 3.48%
-                            </span>{" "}
-                            <span className="text-nowrap">Since last week</span>
-                          </p>
-                        </CardBody>
-                      </Card>
-                    </Col>
-                  </Row>
-                  {/* <Row className="mt-3">
-                    <Col md="6">
-                      <Card className="card-stats mb-4 mb-xl-0">
-                        <CardBody>
-                          <Row>
-                            <div className="col">
-                              <CardTitle
-                                tag="h5"
-                                className="text-uppercase text-muted mb-0"
-                              >
-                                Sales
-                              </CardTitle>
-                              <span className="h2 font-weight-bold mb-0">
-                                924
-                              </span>
-                            </div>
-                            <Col className="col-auto">
-                              <div className="icon icon-shape bg-yellow text-white rounded-circle shadow">
-                                <i className="fas fa-users" />
-                              </div>
-                            </Col>
-                          </Row>
-                          <p className="mt-3 mb-0 text-muted text-sm">
-                            <span className="text-warning mr-2">
-                              <i className="fas fa-arrow-down" /> 1.10%
-                            </span>{" "}
-                            <span className="text-nowrap">Since yesterday</span>
-                          </p>
-                        </CardBody>
-                      </Card>
-                    </Col>
-                    <Col md="6">
-                      <Card className="card-stats mb-4 mb-xl-0">
-                        <CardBody>
-                          <Row>
-                            <div className="col">
-                              <CardTitle
-                                tag="h5"
-                                className="text-uppercase text-muted mb-0"
-                              >
-                                Performance
-                              </CardTitle>
-                              <span className="h2 font-weight-bold mb-0">
-                                49,65%
-                              </span>
-                            </div>
-                            <Col className="col-auto">
-                              <div className="icon icon-shape bg-info text-white rounded-circle shadow">
-                                <i className="fas fa-percent" />
-                              </div>
-                            </Col>
-                          </Row>
-                          <p className="mt-3 mb-0 text-muted text-sm">
-                            <span className="text-success mr-2">
-                              <i className="fas fa-arrow-up" /> 12%
-                            </span>{" "}
-                            <span className="text-nowrap">
-                              Since last month
-                            </span>
-                          </p>
-                        </CardBody>
-                      </Card>
-                    </Col>
-                  </Row> */}
-                </Container>
+                          );
+                        })}
+                      </Row>
+                    </div>
+                  </Col>
+                </Row>
               </CardBody>
             </Card>
           </Col>
@@ -395,7 +342,7 @@ const HomeManagement = () => {
                 </thead>
                 <tbody>
                   <RenderFundList
-                    funds={funds}
+                    fundList={fundList}
                     users={users}
                     currentPage={currentPage}
                     rowsPerPage={rowsPerPage}
@@ -440,4 +387,4 @@ const HomeManagement = () => {
   );
 };
 
-export default HomeManagement;
+export default UserProfile;

@@ -21,12 +21,12 @@ import Profile from "views/pages/Profile.js";
 // import Tables from "views/pages/Tables.js";
 // import Icons from "views/pages/Icons.js";
 import CreateFundOrProject from "views/pages/CreateFundOrProject";
-import UserProfile from "views/pages/Homes";
+import UserProfile from "views/pages/UserProfile";
 import ProejctManagement from "views/pages/ProejctManagement";
 import Register from "views/pages/Register.js";
 import Login from "views/pages/Login.js";
 
-import RobotDetail from "views/pages/ProejctManagement/components/RobotDetail";
+import ProjectDetail from "views/pages/ProejctManagement/components/ProjectDetail";
 import HomePage from "views/pages/HomePage";
 import FundDetail from "views/pages/FundDetail";
 import ProjectList from "views/pages/ProjectList";
@@ -51,7 +51,7 @@ var routes = [
     name: "Project Management",
     icon: "ni ni-controller",
     childPath: ":projectId",
-    childComponent: <RobotDetail />,
+    childComponent: <ProjectDetail />,
     component: <ProejctManagement />,
     layout: "/admin",
   },

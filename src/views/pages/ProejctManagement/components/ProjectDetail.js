@@ -13,7 +13,7 @@ import {
 } from "reactstrap";
 // core components
 import Dashboard from "./DashBoard";
-const RobotDetail = (props) => {
+const ProjectDetail = (props) => {
   return (
     <>
       {/* Page content */}
@@ -230,4 +230,4 @@ const RobotDetail = (props) => {
     </>
   );
 };
-export default RobotDetail;
+export default ProjectDetail;

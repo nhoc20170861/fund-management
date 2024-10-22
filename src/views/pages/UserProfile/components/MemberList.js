@@ -19,12 +19,15 @@ const MemberList = ({ users: userList = [], members = [] }) => {
             <a
               className="avatar avatar-sm"
               href="#pablo"
-              id={`tooltip${user.id}`}
+              id={`tooltip-avatar-user-${user.id}`}
               onClick={(e) => e.preventDefault()}
             >
               <Avatar {...stringAvatar(user.username || "name")} />
             </a>
-            <UncontrolledTooltip delay={0} target={`tooltip${user.id}`}>
+            <UncontrolledTooltip
+              delay={0}
+              target={`tooltip-avatar-user-${user.id}`}
+            >
               {user.username || "name"}
             </UncontrolledTooltip>
           </>

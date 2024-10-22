@@ -30,8 +30,7 @@ import {
 } from "reactstrap";
 import { useNavigate, useLocation, Outlet, useParams } from "react-router-dom";
 import Avatar from "@mui/material/Avatar";
-import { styled } from "@mui/material/styles";
-import Badge from "@mui/material/Badge";
+
 // core components
 import HeaderCustom from "components/Headers/HeaderCustom.js";
 // import network
@@ -80,14 +79,10 @@ const ProejctManagement = () => {
     fetchAllFundsForThisUser();
   }, []);
 
-  const [isShowModal, setIsShowModal] = useState(false);
-
   const handleBtnClick = (key) => {
     const url = location.pathname + "/" + key;
     console.log("🚀 ~ file: index.js:107 ~ handleBtnClick ~ url:", url);
     navigate(url);
-
-    setIsShowModal(!isShowModal);
   };
   return (
     <>
