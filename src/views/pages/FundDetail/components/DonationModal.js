@@ -40,13 +40,26 @@ const DonationModal = ({
   setProjectDetail,
   exchangeRate,
 }) => {
-  const [anonymous, setAnonymous] = useState(false);
-  const [donationAmount, setDonationAmount] = useState("");
+  const [anonymous, setAnonymous] = useState(true);
+  const [donationAmount, setDonationAmount] = useState(0);
   const [usdEquivalent, setUsdEquivalent] = useState(""); // State for VND
   const [walletConnected, setWalletConnected] = useState(false);
   const [userAddress, setUserAddress] = useState(null);
   const [transactionId, setTransactionId] = useState("");
   const [openQRModal, setOpenQRModal] = useState(false);
+  const [formData, setFormData] = useState(() => ({
+    project_id: projectId,
+    amount: 0,
+    email: "",
+    sodienthoai: "",
+    address: "",
+    name: "",
+    type_sender_wallet: "pera",
+    sender_wallet_address: "",
+    receiver_wallet_addres: "",
+    transaction_id: 0,
+    roundTime: 0,
+  }));
   // Toggle the QR code modal
   const toggleQRModal = () => {
     setOpenQRModal(!openQRModal);
@@ -71,6 +84,14 @@ const DonationModal = ({
     } else {
       setUsdEquivalent("");
     }
+  };
+
+  const handleDataFormChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
   };
 
   const convertMicroAlgosToVND = (microAlgos) => {
@@ -318,18 +339,19 @@ const DonationModal = ({
       // Save transaction info to the database
 
       const newContribute_trans = {
-        project_id: projectId,
+        ...formData,
         amount: donationAmount,
-        email: "",
-        sodienthoai: "",
-        address: "",
-        name: "",
-        type_sender_wallet: "pera",
         sender_wallet_address: userAddress,
         receiver_wallet_addres: projectWalletAddress,
         transaction_id: txid,
         roundTime: roundTime,
       };
+      if (anonymous) {
+        newContribute_trans.sodienthoai = "";
+        newContribute_trans.address = "";
+        newContribute_trans.name = "";
+      }
+
       console.log(
         "🚀 ~ addContributeTranstaction ~ newContribute_trans:",
         newContribute_trans
@@ -476,6 +498,9 @@ const DonationModal = ({
                   fullWidth
                   required
                   disabled={anonymous}
+                  name="name"
+                  value={formData.name ?? "Your name"}
+                  onChange={handleDataFormChange}
                 />
               </Grid>
               <Grid size={6}>
@@ -485,16 +510,9 @@ const DonationModal = ({
                   fullWidth
                   required
                   disabled={anonymous}
-                />
-              </Grid>
-
-              <Grid size={6}>
-                <TextField
-                  label="Địa chỉ"
-                  variant="outlined"
-                  fullWidth
-                  required
-                  disabled={anonymous}
+                  name="sodienthoai"
+                  value={formData.sodienthoai ?? "Your Mobile Phone"}
+                  onChange={handleDataFormChange}
                 />
               </Grid>
               <Grid size={6}>
@@ -504,6 +522,21 @@ const DonationModal = ({
                   fullWidth
                   required
                   disabled={anonymous}
+                  name="email"
+                  value={formData.email ?? "Your email"}
+                  onChange={handleDataFormChange}
+                />
+              </Grid>
+              <Grid size={6}>
+                <TextField
+                  label="Địa chỉ"
+                  variant="outlined"
+                  fullWidth
+                  required
+                  disabled={anonymous}
+                  name="address"
+                  value={formData.address ?? "Your address"}
+                  onChange={handleDataFormChange}
                 />
               </Grid>
             </Grid>
@@ -574,6 +607,7 @@ const DonationModal = ({
               fullWidth
               onClick={sendTransaction}
               sx={{ mt: 2 }}
+              disabled={!userAddress || donationAmount <= 0}
             >
               Gửi Thông Tin
             </Button>

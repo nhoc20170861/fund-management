@@ -331,7 +331,7 @@ const FundDetail = () => {
                   {/* Progress Bar */}
                   <LinearProgress
                     variant="determinate"
-                    value={progress.toFixed(1) || 0}
+                    value={progress || 0}
                     sx={{
                       height: "12px",
                       borderRadius: "5px",
