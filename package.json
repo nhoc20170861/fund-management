@@ -63,6 +63,7 @@
     "createjs-module": "^0.8.3",
     "dayjs": "^1.11.13",
     "js-sha512": "^0.8.0",
+    "lodash": "^4.17.21",
     "moment": "2.29.4",
     "nouislider": "15.4.0",
     "qrcode.react": "^4.0.1",

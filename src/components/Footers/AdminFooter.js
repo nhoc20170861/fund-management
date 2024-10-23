@@ -23,17 +23,18 @@ import { Container, Row, Col, Nav, NavItem, NavLink } from "reactstrap";
 const Footer = () => {
   return (
     <footer className="footer">
-      {/* <Row className="align-items-center justify-content-xl-between">
+      <Row className="align-items-center justify-content-xl-between">
         <Col xl="6">
           <div className="copyright text-center text-xl-left text-muted">
             © {new Date().getFullYear()}{" "}
             <a
               className="font-weight-bold ml-1"
-              href="https://www.creative-tim.com?ref=adr-admin-footer"
+              // href="https://www.creative-tim.com?ref=adr-admin-footer"
+              style={{ color: "#0000ff" }}
               rel="noopener noreferrer"
               target="_blank"
             >
-              Creative Tim
+              AlgoMind Fund
             </a>
           </div>
         </Col>
@@ -42,21 +43,21 @@ const Footer = () => {
           <Nav className="nav-footer justify-content-center justify-content-xl-end">
             <NavItem>
               <NavLink
-                href="https://www.creative-tim.com?ref=adr-admin-footer"
-                rel="noopener noreferrer"
+                //href="https://www.creative-tim.com?ref=adr-auth-footer"
                 target="_blank"
+                style={{ color: "white" }}
               >
-                Creative Tim
+                NGUYEN VAN HOANG
               </NavLink>
             </NavItem>
 
             <NavItem>
               <NavLink
-                href="https://www.creative-tim.com/presentation?ref=adr-admin-footer"
-                rel="noopener noreferrer"
+                //href="https://www.creative-tim.com?ref=adr-auth-footer"
                 target="_blank"
+                style={{ color: "white" }}
               >
-                About Us
+                PHAM ANH QUAN
               </NavLink>
             </NavItem>
 
@@ -81,7 +82,7 @@ const Footer = () => {
             </NavItem>
           </Nav>
         </Col>
-      </Row> */}
+      </Row>
     </footer>
   );
 };

@@ -34,7 +34,7 @@ import ProjectList from "views/pages/ProjectList";
 var routes = [
   {
     path: "user-profile",
-    name: "User Profile",
+    name: "Thông tin người dùng",
     icon: "ni ni-single-02 text-yellow",
     component: <UserProfile />,
     layout: "/admin",
@@ -42,7 +42,7 @@ var routes = [
   {
     path: "tao-du-an",
     name: "Tạo Quỹ và Dự án",
-    icon: "bi bi-hdd-stack",
+    icon: "ni ni-spaceship text-pink",
     component: <CreateFundOrProject />,
     layout: "/admin",
   },

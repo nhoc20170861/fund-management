@@ -22,7 +22,7 @@ import { Container, Row, Col } from "reactstrap";
 
 // core components
 import AuthNavbar from "components/Navbars/AuthNavbar.js";
-// import AuthFooter from "components/Footers/AuthFooter.js";
+import AuthFooter from "components/Footers/AuthFooter.js";
 import { ToastContainer } from "react-toastify";
 const Auth = (props) => {
   const mainContent = React.useRef(null);
@@ -94,7 +94,7 @@ const Auth = (props) => {
           </Row>
         </Container>
       </div>
-      {/* <AuthFooter /> */}
+      <AuthFooter />
     </>
   );
 };

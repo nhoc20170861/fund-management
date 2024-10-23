@@ -21,12 +21,15 @@ import { QRCodeCanvas } from "qrcode.react"; // Library for generating QR code
 import { PeraWalletConnect } from "@perawallet/connect";
 import { ShowToastMessage } from "utils/ShowToastMessage";
 import { addContributeTranstaction } from "network/ApiAxios";
+
+import CustomAlert from "components/CustomAlert"; // Import CustomAlert
 import configs from "configs";
+
 const peraWallet = new PeraWalletConnect();
 const algodToken = ""; // Thay bằng API key của Algorand node
 const algodServer = configs.ALGORAND_SERVER;
 const algodPort = configs.ALGORAND_SERVER_PORT;
-
+const indexerServer = configs.algorand_indexer_server;
 const algodClient = new algosdk.Algodv2(algodToken, algodServer, algodPort);
 const DonationModal = ({
   open,
@@ -35,36 +38,19 @@ const DonationModal = ({
   projectName,
   projectId,
   setProjectDetail,
+  exchangeRate,
 }) => {
   const [anonymous, setAnonymous] = useState(false);
   const [donationAmount, setDonationAmount] = useState("");
   const [usdEquivalent, setUsdEquivalent] = useState(""); // State for VND
   const [walletConnected, setWalletConnected] = useState(false);
   const [userAddress, setUserAddress] = useState(null);
-  const [exchangeRate, setExchangeRate] = useState(0); // Tỷ giá ALGO/VND
-
+  const [transactionId, setTransactionId] = useState("");
   const [openQRModal, setOpenQRModal] = useState(false);
   // Toggle the QR code modal
   const toggleQRModal = () => {
     setOpenQRModal(!openQRModal);
   };
-
-  useEffect(() => {
-    // Lấy tỷ giá hối đoái từ CoinGecko API
-    const fetchExchangeRate = async () => {
-      try {
-        const response = await fetch(
-          "https://api.coingecko.com/api/v3/simple/price?ids=algorand&vs_currencies=VND"
-        );
-        const data = await response.json();
-        setExchangeRate(data.algorand.vnd); // Lưu tỷ giá vào state
-      } catch (error) {
-        console.error("Lỗi khi lấy tỷ giá:", error);
-      }
-    };
-
-    fetchExchangeRate();
-  }, []);
 
   const handleAnonymousChange = (event) => {
     setAnonymous(event.target.checked);
@@ -167,7 +153,7 @@ const DonationModal = ({
       );
       setProjectDetail((prev) => ({
         ...prev,
-        current_fund: balanceInVND.toFixed(0),
+        current_fund: Number(balanceInVND.toFixed(0)),
       }));
       return balanceInVND;
     } catch (error) {
@@ -175,6 +161,36 @@ const DonationModal = ({
       throw error;
     }
   };
+
+  const getTransactionFromIndexer = async (txid) => {
+    const indexerClient = new algosdk.Indexer(
+      "",
+      indexerServer, // URL của indexer, đây là một ví dụ cho TestNet
+      ""
+    );
+    try {
+      // Truy vấn thông tin giao dịch từ Indexer bằng transaction ID (txid)
+      const txnResponse = await indexerClient.lookupTransactionByID(txid).do();
+
+      console.log("Transaction details from indexer:", txnResponse);
+
+      const roundTime = txnResponse.transaction["roundTime"];
+      console.log("Round time from indexer:", roundTime);
+
+      return roundTime;
+    } catch (error) {
+      console.error("Error querying transaction from indexer:", error);
+    }
+  };
+
+  async function getNodeStatus() {
+    try {
+      const status = await algodClient.status().do();
+      console.log("Node status:", status);
+    } catch (err) {
+      console.error("Failed to get node status:", err);
+    }
+  }
 
   const sendTransaction = async () => {
     if (!walletConnected) {
@@ -193,19 +209,15 @@ const DonationModal = ({
       alert("Địa chỉ ví của bạn không hợp lệ!");
       return;
     }
+    // Check if the userAddress and projectWalletAddress are the same
+    if (userAddress === projectWalletAddress) {
+      alert("Địa chỉ người gửi và người nhận không thể giống nhau!");
+      return; // Dừng nếu địa chỉ giống nhau
+    }
     console.log("🚀 ~ sendTransaction ~ userAddress:", userAddress);
 
-    async function getNodeStatus() {
-      try {
-        const status = await algodClient.status().do();
-        console.log("Node status:", status);
-      } catch (err) {
-        console.error("Failed to get node status:", err);
-      }
-    }
-
     // Call the function to print the node status
-    getNodeStatus();
+    // getNodeStatus();
 
     // const acctInfo = await algodClient
     //     .accountInformation(projectWalletAddress)
@@ -238,85 +250,15 @@ const DonationModal = ({
 
     console.log("Transaction:", txGroups);
     // Close the modal after generating the transaction
-    handleCloseModal();
+    // handleCloseModal();
 
+    let signedTxn; // Khai báo signedTxn ở bên ngoài khối try-catch
+    let txid; // Khai báo txid ở ngoài để dùng sau khi gửi giao dịch
+    let roundTime; // Khai báo roundTime để dùng sau khi lấy từ indexer
     try {
       // Sign the transaction using Pera Wallet
-      const signedTxn = await peraWallet.signTransaction([txGroups]);
-
-      // Send the raw signed transaction to the network
-      const { txid } = await algodClient.sendRawTransaction(signedTxn).do();
-
-      // Wait for confirmation of the transaction
-      const result = await algosdk.waitForConfirmation(algodClient, txid, 10);
-      console.log("Transaction confirmed:", result);
-      console.log("Transaction Information:", result.txn.txn);
-      console.log(
-        `Decoded Note: ${Buffer.from(result.txn.txn.note).toString()}`
-      );
-
-      // // Prepare the API request to notify the server
-      // const apiPayload = {
-      //   txid: txid, // The transaction ID
-      //   sender: userAddress, // Sender's wallet address
-      //   receiver: projectWalletAddress, // Receiver's wallet address
-      //   amount: parseInt(usdEquivalent * 1000000, 10), // Amount in microAlgos
-      //   status: "success", // Status of the transaction
-      // };
-      ShowToastMessage({
-        title: "Payment Transaction",
-        message: `Giao dịch thành công!`,
-        type: "success",
-      });
-
-      const newContribute_trans = {
-        project_id: projectId,
-        amount: donationAmount,
-        email: "",
-        sodienthoai: "",
-        address: "",
-        name: "",
-        type_sender_wallet: "pera",
-        sender_wallet_address: userAddress,
-        roundTime: "",
-      };
-      console.log(
-        "🚀 ~ addContributeTranstaction ~ newContribute_trans:",
-        newContribute_trans
-      );
-
-      try {
-        const response = await addContributeTranstaction(
-          projectId,
-          newContribute_trans
-        );
-
-        const { data } = response;
-        console.log("🚀 ~ addContributeTranstaction ~ data:", response);
-        if (data?.statusCode === 200) {
-          ShowToastMessage({
-            title: "Store transtaction",
-            message: "Lưu transtaction thành công",
-            type: "success",
-          });
-        } else {
-          ShowToastMessage({
-            title: "Store transtaction",
-            message: "Cập nhập dữ liệu thất bại",
-            type: "error",
-          });
-        }
-      } catch (innerError) {
-        console.error("Error handling response data:", innerError);
-        ShowToastMessage({
-          title: "Error",
-          message: "Có lỗi xảy ra khi xử lý dữ liệu phản hồi",
-          type: "error",
-        });
-      }
-
-      checkAccountBalance(projectWalletAddress);
-      // alert("Giao dịch thành công!");
+      signedTxn = await peraWallet.signTransaction([txGroups]);
+      console.log("Transaction signed successfully");
     } catch (error) {
       if (error.message.includes("Confirmation Failed")) {
         // Handle the case when the user rejects the transaction
@@ -328,6 +270,102 @@ const DonationModal = ({
         alert("Đã xảy ra lỗi trong quá trình giao dịch. Vui lòng thử lại sau.");
       }
     }
+
+    try {
+      // Send the raw signed transaction to the network
+      const sendTxnResponse = await algodClient
+        .sendRawTransaction(signedTxn)
+        .do();
+      txid = sendTxnResponse.txid; // Lấy transaction ID
+      console.log("Transaction ID:", txid);
+    } catch (error) {
+      console.error("Error sending the transaction:", error);
+      alert("Có lỗi xảy ra khi gửi giao dịch lên mạng. Vui lòng thử lại sau.");
+      return; // Dừng nếu có lỗi
+    }
+
+    try {
+      // Wait for confirmation of the transaction
+      const result = await algosdk.waitForConfirmation(algodClient, txid, 10);
+      // console.log("Transaction confirmed:", result);
+      // console.log("Transaction Information:", result.txn.txn);
+      console.log(
+        `Decoded Note: ${Buffer.from(result.txn.txn.note).toString()}`
+      );
+
+      // Gọi Indexer API để lấy thông tin round time
+      setTransactionId(txid);
+      roundTime = await getTransactionFromIndexer(txid);
+      console.log("Round time:", roundTime);
+    } catch (error) {
+      console.error(
+        "Error waiting for confirmation or getting round time:",
+        error
+      );
+      alert(
+        "Có lỗi xảy ra trong quá trình xác nhận giao dịch hoặc lấy thông tin round time."
+      );
+      return;
+    }
+
+    ShowToastMessage({
+      title: "Payment Transaction",
+      message: `Giao dịch thành công!`,
+      type: "success",
+    });
+
+    try {
+      // Save transaction info to the database
+
+      const newContribute_trans = {
+        project_id: projectId,
+        amount: donationAmount,
+        email: "",
+        sodienthoai: "",
+        address: "",
+        name: "",
+        type_sender_wallet: "pera",
+        sender_wallet_address: userAddress,
+        receiver_wallet_addres: projectWalletAddress,
+        transaction_id: txid,
+        roundTime: roundTime,
+      };
+      console.log(
+        "🚀 ~ addContributeTranstaction ~ newContribute_trans:",
+        newContribute_trans
+      );
+
+      const response = await addContributeTranstaction(
+        projectId,
+        newContribute_trans
+      );
+
+      const { data } = response;
+      console.log("🚀 ~ addContributeTranstaction ~ data:", response);
+      if (data?.statusCode === 200) {
+        ShowToastMessage({
+          title: "Store transtaction",
+          message: "Lưu transtaction thành công",
+          type: "success",
+        });
+      } else {
+        ShowToastMessage({
+          title: "Store transtaction",
+          message: "Cập nhập dữ liệu thất bại",
+          type: "error",
+        });
+      }
+    } catch (innerError) {
+      console.error("Error handling response data:", innerError);
+      ShowToastMessage({
+        title: "Error",
+        message: "Có lỗi xảy ra khi xử lý dữ liệu phản hồi",
+        type: "error",
+      });
+    }
+
+    checkAccountBalance(projectWalletAddress);
+    // alert("Giao dịch thành công!");
   };
 
   const copyToClipboard = () => {
@@ -514,6 +552,12 @@ const DonationModal = ({
                 Ví đã kết nối: {userAddress}
               </Typography>
             )}
+            {transactionId && (
+              <div>
+                <p>Giao dịch thành công với TxID: {transactionId}</p>
+              </div>
+            )}
+
             <Button
               variant="contained"
               color={walletConnected ? "secondary" : "success"}

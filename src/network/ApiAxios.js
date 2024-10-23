@@ -29,7 +29,7 @@ instance.interceptors.request.use(
 
     const projectPattern = /\/projects\/\d+\/contributes/;
     if (projectPattern.test(config.url)) {
-      config.headers["X-Key-SC"] = configs.REACT_APP_HASH_KEY_API;
+      config.headers["X-Key-SC"] = configs.hash_key_api;
       return config;
     }
 
@@ -94,7 +94,7 @@ instance.interceptors.response.use(
 
     return response;
   },
-  (error) => {
+  async (error) => {
     // Handle errors
     if (
       error.response &&
@@ -108,7 +108,8 @@ instance.interceptors.response.use(
       localStorage.removeItem("userInfo");
       localStorage.removeItem("userId");
       localStorage.removeItem("projectListForCurrentUser");
-
+      alert("✈️✈️ Bạn cần đăng nhập lại ✈️✈️");
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate loading
       // Redirect to the homepage
       window.location.assign("/login"); // Change to the path you want to redirect to
     }

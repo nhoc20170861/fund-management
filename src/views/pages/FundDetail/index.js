@@ -43,15 +43,8 @@ import { styled } from "@mui/material/styles";
 import dayjs from "dayjs";
 import Slider from "react-slick"; // Thêm thư viện Slider
 import ReactMarkdown from "react-markdown";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+
+import { useLocalStorage } from "@rehooks/local-storage";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import SupportersList from "./components/SupportersList";
@@ -59,7 +52,7 @@ import ReceiverList from "./components/ReceiverList";
 import { getOneProjectDetail } from "network/ApiAxios";
 import { ShowToastMessage } from "utils/ShowToastMessage";
 import { formatAmountVND } from "utils/functions";
-// Dữ liệu giả lập cho ví dụ
+import configs from "configs";
 
 // Styled components
 const StyledCard = styled(Card)(({ theme }) => ({
@@ -73,29 +66,6 @@ const ProgressContainer = styled(Box)(({ theme }) => ({
   marginTop: theme.spacing(2),
 }));
 
-const ModalContainer = styled(Box)(({ theme }) => ({
-  position: "absolute",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  width: "50%",
-  backgroundColor: theme.palette.background.paper,
-  border: "2px solid #000",
-  boxShadow: theme.shadows[5],
-  padding: theme.spacing(2, 4, 3),
-}));
-
-const CustomTablePagination = styled(TablePagination)({
-  backgroundColor: "#f5f5f5",
-  color: "black",
-  fontWeight: "bold",
-  fontSize: "16px",
-  textAlign: "center",
-  "& .MuiToolbar-root p": {
-    margin: "0", // Loại bỏ margin-top của thẻ <p>
-  },
-});
-
 const StyledBox = styled(Box)({
   backgroundColor: "#f9f9f9", // Light background to make it stand out
   borderRadius: "8px",
@@ -107,17 +77,27 @@ const FundDetail = () => {
   const [open, setOpen] = useState(false);
   const [donationAmount, setDonationAmount] = useState("");
   const [anonymous, setAnonymous] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(20);
   const [tabIndex, setTabIndex] = useState(0);
-  const [transactionId, setTransactionId] = useState("");
-  const [sender, setSender] = useState(""); // Địa chỉ ví người gửi
-  const [receiver, setReceiver] = useState(""); // Địa chỉ ví người nhận
   const [loading, setLoading] = useState(true);
   const [projectDetail, setProjectDetail] = useState({}); // Địa chỉ ví người nhận
   const [isProjectEnded, setIsProjectEnded] = useState(false);
+  const [exchangeRate, setExchangeRate] = useLocalStorage(
+    "exchangeRateAlgoToVND",
+    0
+  ); // To store ALGO to VND exchange rate
 
+  const [progress, setProgress] = React.useState(() => {
+    const previousProgress =
+      (projectDetail?.current_fund / projectDetail?.fund_raise_total) * 100;
+    return !isNaN(previousProgress) ? previousProgress : 0;
+  });
+  useEffect(
+    () =>
+      setProgress(
+        (projectDetail?.current_fund / projectDetail?.fund_raise_total) * 100
+      ),
+    [projectDetail?.current_fund, projectDetail?.fund_raise_total]
+  );
   const handleTabChange = (event, newValue) => {
     setTabIndex(newValue);
   };
@@ -158,47 +138,28 @@ const FundDetail = () => {
         setLoading(false); // Set loading to false after data is fetched
       }
     };
+
+    const fetchExchangeRateAlgoToVND = async () => {
+      try {
+        const response = await fetch(configs.api_convert_Algo_to_VND);
+        const data = await response.json();
+        console.log(
+          "🚀 ~ fetchExchangeRateAlgoToVND ~ data.algorand.vnd:",
+          data.algorand.vnd
+        );
+        setExchangeRate(data.algorand.vnd); // Lưu tỷ giá vào state
+      } catch (error) {
+        console.error("Lỗi khi lấy tỷ giá:", error);
+      }
+    };
+
     fetchOneProjectDetail();
+    fetchExchangeRateAlgoToVND();
   }, []);
 
   const handleOpenFormRaise = () => setOpen(true);
   const handleCloseModal = () => setOpen(false);
   const handleAnonymousChange = (e) => setAnonymous(e.target.checked);
-  const handleSearchChange = (e) => setSearchQuery(e.target.value);
-  const handlePageChange = (event, newPage) => setPage(newPage);
-  const handleRowsPerPageChange = (event) =>
-    setRowsPerPage(parseInt(event.target.value, 10));
-  const donationDataDaily = [
-    { day: "2024-10-01", amount: 500 },
-    { day: "2024-10-02", amount: 700 },
-    { day: "2024-10-03", amount: 1500 },
-    { day: "2024-10-04", amount: 900 },
-    { day: "2024-10-05", amount: 1200 },
-    { day: "2024-10-06", amount: 300 },
-    { day: "2024-10-07", amount: 450 },
-  ];
-
-  const supporters = [
-    { name: "Nguyễn Văn A", amount: "100.000 VNĐ", time: "2024-10-01 10:00" },
-    { name: "Trần Thị B", amount: "200.000 VNĐ", time: "2024-10-02 11:30" },
-    { name: "Trần Thị B", amount: "200.000 VNĐ", time: "2024-10-02 11:30" },
-    { name: "Trần Thị B", amount: "200.000 VNĐ", time: "2024-10-02 11:30" },
-    { name: "Trần Thị B", amount: "200.000 VNĐ", time: "2024-10-02 11:30" },
-    { name: "Trần Thị B", amount: "200.000 VNĐ", time: "2024-10-02 11:30" },
-    { name: "Trần Thị B", amount: "200.000 VNĐ", time: "2024-10-02 11:30" },
-    { name: "Trần Thị B", amount: "200.000 VNĐ", time: "2024-10-02 11:30" },
-    { name: "Trần Thị B", amount: "200.000 VNĐ", time: "2024-10-02 11:30" },
-    { name: "Trần Thị B", amount: "200.000 VNĐ", time: "2024-10-02 11:30" },
-    { name: "Trần Thị B", amount: "200.000 VNĐ", time: "2024-10-02 11:30" },
-    // Thêm các mục người ủng hộ khác
-  ];
-
-  const filteredSupporters = supporters.filter(
-    (supporter) =>
-      supporter.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      supporter.amount.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      supporter.time.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   let sliderRef = React.useRef(null);
   const next = () => {
@@ -208,43 +169,6 @@ const FundDetail = () => {
     sliderRef.slickPrev();
   };
 
-  const [timeRange, setTimeRange] = useState("daily"); // Default is daily view
-
-  const handleTimeRangeChange = (event) => {
-    setTimeRange(event.target.value);
-  };
-  const donationDataWeekly = [
-    { week: "Week 1", amount: 4200 },
-    { week: "Week 2", amount: 3900 },
-  ];
-
-  // Dữ liệu mẫu theo tháng
-  const donationDataMonthly = [
-    { month: "October", amount: 8100 },
-    { month: "November", amount: 4500 },
-  ];
-  // Chọn dữ liệu biểu đồ dựa trên khoảng thời gian
-  const getChartData = () => {
-    switch (timeRange) {
-      case "weekly":
-        return donationDataWeekly;
-      case "monthly":
-        return donationDataMonthly;
-      default:
-        return donationDataDaily;
-    }
-  };
-
-  const getXAxisKey = () => {
-    switch (timeRange) {
-      case "weekly":
-        return "week";
-      case "monthly":
-        return "month";
-      default:
-        return "day";
-    }
-  };
   // Cấu hình cho carousel
   const settings = {
     dots: true,
@@ -407,7 +331,7 @@ const FundDetail = () => {
                   {/* Progress Bar */}
                   <LinearProgress
                     variant="determinate"
-                    value={50}
+                    value={progress.toFixed(1) || 0}
                     sx={{
                       height: "12px",
                       borderRadius: "5px",
@@ -615,118 +539,23 @@ const FundDetail = () => {
               </Box>
             )}
             {tabIndex === 1 && (
-              <SupportersList walletAddress={projectDetail.project_hash} />
-              // <Box sx={{ marginTop: "1rem" }}>
-              //   <Box sx={{ width: "50%", paddingLeft: 2 }}>
-              //     <TextField
-              //       label="Tìm kiếm người ủng hộ"
-              //       variant="outlined"
-              //       fullWidth
-              //       value={searchQuery}
-              //       onChange={handleSearchChange}
-              //       InputProps={{
-              //         startAdornment: (
-              //           <InputAdornment position="start">
-              //             <SearchIcon />
-              //           </InputAdornment>
-              //         ),
-              //       }}
-              //     />
-              //   </Box>
-
-              //   {/* Bảng */}
-              //   <TableContainer component={Paper} sx={{ marginTop: 2 }}>
-              //     <Table>
-              //       <TableHead>
-              //         <TableRow>
-              //           {["Người ủng hộ", "Số tiền", "Thời gian"].map(
-              //             (header, index) => (
-              //               <TableCell
-              //                 key={index}
-              //                 sx={{
-              //                   backgroundColor: "#f5f5f5",
-              //                   color: "black",
-              //                   fontWeight: "bold",
-              //                   fontSize: "16px",
-              //                 }}
-              //               >
-              //                 {header}
-              //               </TableCell>
-              //             )
-              //           )}
-              //         </TableRow>
-              //       </TableHead>
-              //       <TableBody>
-              //         {filteredSupporters
-              //           .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              //           .map((supporter, index) => (
-              //             <TableRow key={index}>
-              //               <TableCell>{supporter.name}</TableCell>
-              //               <TableCell>{supporter.amount}</TableCell>
-              //               <TableCell>{supporter.time}</TableCell>
-              //             </TableRow>
-              //           ))}
-              //       </TableBody>
-              //     </Table>
-
-              //     {/* Phân trang */}
-              //     <CustomTablePagination
-              //       component="div"
-              //       count={filteredSupporters.length}
-              //       page={page}
-              //       onPageChange={handlePageChange}
-              //       rowsPerPage={rowsPerPage}
-              //       onRowsPerPageChange={handleRowsPerPageChange}
-              //       rowsPerPageOptions={[10, 20, 50]}
-              //       labelRowsPerPage="Số dòng mỗi trang:"
-              //       labelDisplayedRows={({ from, to, count }) => {
-              //         return `Hiển thị ${from}-${to} của ${
-              //           count !== -1 ? count : `nhiều hơn ${to}`
-              //         }`;
-              //       }}
-              //     />
-              //   </TableContainer>
-              //   {/* Biểu đồ tổng số tiền nạp mỗi ngày */}
-              //   <Box sx={{ marginTop: 4 }}>
-              //     <FormControl sx={{ marginBottom: 2, minWidth: 120 }}>
-              //       <InputLabel id="time-range-label">Khoảng thời gian</InputLabel>
-              //       <Select
-              //         labelId="time-range-label"
-              //         value={timeRange}
-              //         onChange={handleTimeRangeChange}
-              //         label="Khoảng thời gian"
-              //       >
-              //         <MenuItem value="daily">Ngày</MenuItem>
-              //         <MenuItem value="weekly">Tuần</MenuItem>
-              //         <MenuItem value="monthly">Tháng</MenuItem>
-              //       </Select>
-              //     </FormControl>
-              //     <Typography variant="h6" sx={{ marginBottom: 2 }}>
-              //       Biểu đồ tổng số tiền nạp
-              //     </Typography>
-              //     <ResponsiveContainer width="100%" height={300}>
-              //       <BarChart
-              //         data={getChartData()}
-              //         margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-              //       >
-              //         <CartesianGrid strokeDasharray="3 3" />
-              //         <XAxis dataKey={getXAxisKey()} />
-              //         <YAxis />
-              //         <Tooltip />
-              //         <Bar dataKey="amount" fill="#8884d8" />
-              //       </BarChart>
-              //     </ResponsiveContainer>
-              //   </Box>
-              // </Box>
+              <SupportersList
+                exchangeRate={exchangeRate}
+                walletAddress={projectDetail.project_hash}
+              />
             )}
             {tabIndex === 2 && (
-              <ReceiverList walletAddress={projectDetail.project_hash} />
+              <ReceiverList
+                exchangeRate={exchangeRate}
+                walletAddress={projectDetail.project_hash}
+              />
             )}
           </>
         )}
       </Card>
       {/* Modal để nhập thông tin người dùng */}
       <DonationModal
+        exchangeRate={exchangeRate}
         walletAddress={projectDetail.project_hash}
         open={open}
         handleCloseModal={handleCloseModal}
@@ -738,11 +567,6 @@ const FundDetail = () => {
         projectId={projectId}
         setProjectDetail={setProjectDetail}
       />
-      {transactionId && (
-        <div>
-          <p>Giao dịch thành công với TxID: {transactionId}</p>
-        </div>
-      )}
     </div>
   );
 };

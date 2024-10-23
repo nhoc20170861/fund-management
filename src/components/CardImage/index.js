@@ -58,14 +58,14 @@ const CardImage = ({
   isCompleted = false, // Default isCompleted
 }) => {
   const navigate = useNavigate();
-
-  const [progress, setProgress] = React.useState(
-    () => (currentAmount / targetAmount) * 100
-  );
-  useEffect(
-    () => setProgress((currentAmount / targetAmount) * 100),
-    [currentAmount, targetAmount]
-  );
+  const progress = (currentAmount / targetAmount) * 100;
+  // const [progress, setProgress] = React.useState(
+  //   () => (currentAmount / targetAmount) * 100
+  // );
+  // useEffect(
+  //   () => setProgress((currentAmount / targetAmount) * 100),
+  //   [currentAmount, targetAmount]
+  // );
   const isProjectEnded = dayjs(deadline).isBefore(dayjs());
   const formattedDeadline = isProjectEnded
     ? "Dự án đã kết thúc"
@@ -107,7 +107,7 @@ const CardImage = ({
   };
 
   return (
-    <Card sx={{ maxWidth: 345, height: "27rem" }}>
+    <Card sx={{ width: "22rem", height: "27rem" }}>
       <StyledCard>
         {/* Icon trạng thái dự án */}
         {isProjectEnded ? (
@@ -143,6 +143,10 @@ const CardImage = ({
           <CardMedia
             component="img"
             height="180"
+            sx={{
+              width: "100%",
+              objectFit: "cover", // Đảm bảo ảnh giữ tỷ lệ và cắt nếu cần
+            }}
             image={
               linkcardImage && linkcardImage.length > 0 && linkcardImage[0]
                 ? linkcardImage[0]

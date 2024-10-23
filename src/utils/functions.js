@@ -1,3 +1,4 @@
+import configs from "configs";
 export const formatAmountVND = (amount) => {
   return new Intl.NumberFormat("vi-VN", { style: "decimal" }).format(amount);
 };
@@ -43,3 +44,42 @@ export function stringAvatar(name) {
 export const isValidImageURL = (url) => {
   return /\.(jpg|jpeg|png|gif)$/.test(url);
 };
+
+// Hàm chuyển đổi timestamp thành chuỗi định dạng ngày
+export function getDateFromTimestamp(timestamp) {
+  const date = new Date(timestamp * 1000); // Timestamp tính theo giây, cần nhân với 1000
+  return date.toISOString().split("T")[0]; // Trả về định dạng yyyy-mm-dd
+}
+
+// Nhóm các giao dịch theo ngày
+export const getGroupedByDay = (transactions) => {
+  const group = transactions.reduce((acc, tx) => {
+    const date = getDateFromTimestamp(tx["round-time"]);
+    acc[date] = (acc[date] || 0) + tx["payment-transaction"].amount;
+    return acc;
+  }, {});
+  return group;
+};
+
+// Hàm lấy tuần từ timestamp
+export function getWeekFromTimestamp(timestamp) {
+  const date = new Date(timestamp * 1000);
+  const startOfWeek = new Date(date.setDate(date.getDate() - date.getDay()));
+  return startOfWeek.toISOString().split("T")[0]; // Trả về ngày đầu tuần
+}
+
+// Nhóm các giao dịch theo ngày
+export const getGroupdByWeek = (transactions) => {
+  const group = transactions.reduce((acc, tx) => {
+    const date = getWeekFromTimestamp(tx["round-time"]);
+    acc[date] = (acc[date] || 0) + tx["payment-transaction"].amount;
+    return acc;
+  }, {});
+  return group;
+};
+
+// Hàm lấy tháng từ timestamp
+export function getMonthFromTimestamp(timestamp) {
+  const date = new Date(timestamp * 1000);
+  return date.toISOString().substring(0, 7); // Trả về định dạng yyyy-mm
+}

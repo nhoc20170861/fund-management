@@ -1,4 +1,11 @@
-const { REACT_APP_SERVER_DOMAIN_NAME, REACT_APP_APP_DOMAIN_NAME, HASH_KEY_API } = process.env;
+const {
+  REACT_APP_SERVER_DOMAIN_NAME,
+  REACT_APP_APP_DOMAIN_NAME,
+  REACT_APP_HASH_KEY_API,
+  REACT_APP_ALGORAND_INDEXER_SERVER,
+  REACT_APP_API_FOR_CONVERT_ALGO_TO_VND,
+} = process.env;
+
 const doamin_server =
   process.env.REACT_APP_APP_NODE_ENV === "production"
     ? REACT_APP_SERVER_DOMAIN_NAME
@@ -17,7 +24,9 @@ const configs = {
   DEMO: false,
   ALGORAND_SERVER: algorand_server,
   ALGORAND_SERVER_PORT: process.env.REACT_APP_ALGORAND_SERVER_PORT || 443,
-  HASH_KEY_API
+  hash_key_api: REACT_APP_HASH_KEY_API,
+  algorand_indexer_server: REACT_APP_ALGORAND_INDEXER_SERVER,
+  api_convert_Algo_to_VND: REACT_APP_API_FOR_CONVERT_ALGO_TO_VND,
 };
 
 export default configs;

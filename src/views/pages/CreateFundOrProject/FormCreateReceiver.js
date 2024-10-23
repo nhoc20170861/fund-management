@@ -14,12 +14,16 @@ import { PeraWalletConnect } from "@perawallet/connect";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 
-import { getProjectDetailByUserAndFundId, addReceiverForOneProject } from "network/ApiAxios";
+import {
+  getProjectDetailByUserAndFundId,
+  addReceiverForOneProject,
+  getFundsForOneUser,
+} from "network/ApiAxios";
 import { ShowToastMessage } from "utils/ShowToastMessage";
 import {
-    writeStorage,
-    deleteFromStorage,
-    useLocalStorage,
+  writeStorage,
+  deleteFromStorage,
+  useLocalStorage,
 } from "@rehooks/local-storage";
 
 const wallet_type = {
@@ -29,6 +33,10 @@ const wallet_type = {
 const FormCreateReceiver = () => {
   // Initialize Pera Wallet
   const peraWallet = new PeraWalletConnect();
+  const [fundListForCurrUser, setFundListForCurrUser] = useLocalStorage(
+    "fundListForCurrUser",
+    []
+  );
   const [formData, setFormData] = useState({
     email: "",
     sodienthoai: "",
@@ -41,8 +49,9 @@ const FormCreateReceiver = () => {
   const [isValidAddress, setIsValidAddress] = useState(null); // Track address validity
   const [errorMessage, setErrorMessage] = useState("");
   const [walletConnected, setWalletConnected] = useState(false);
-
-  const [projectListForCurrentUser, setProjectListForCurrentUser] = useLocalStorage("projectListForCurrentUser", []);
+  const [fundIdSlected, setFundIdSelected] = useState(0);
+  const [projectListForCurrentUser, setProjectListForCurrentUser] =
+    useLocalStorage("projectListForCurrentUser", []);
 
   // Validate Algorand wallet address
   const validateAlgorandAddress = (address) => {
@@ -59,24 +68,45 @@ const FormCreateReceiver = () => {
       setErrorMessage("Invalid address format.");
     }
   };
-  
+
   useEffect(() => {
-    const fetchAllProjectByFunds= async () => {
+    const fetchAllFundsForThisUser = async () => {
       try {
         const userId = localStorage.getItem("userId");
-        const response = await getProjectDetailByUserAndFundId(userId);
+        const response = await getFundsForOneUser(userId);
 
         const { data } = response;
-        console.log("🚀 ~ fetchAllProjectByFunds ~ data:", data)
-        
-        if(data.statusCode === 200) {
-            setProjectListForCurrentUser(data.body);
+        setFundListForCurrUser(data.body);
+      } catch (error) {
+        console.log(
+          "🚀 ~ file: index.js:223 ~ fetchAllFundsForThisUser ~ error:",
+          error
+        );
+      }
+    };
+    fetchAllFundsForThisUser();
+  }, []);
+
+  useEffect(() => {
+    const fetchAllProjectByFunds = async () => {
+      try {
+        const userId = localStorage.getItem("userId");
+        const response = await getProjectDetailByUserAndFundId(
+          userId,
+          fundIdSlected
+        );
+
+        const { data } = response;
+        console.log("🚀 ~ fetchAllProjectByFunds ~ data:", data);
+
+        if (data.statusCode === 200) {
+          setProjectListForCurrentUser(data.body);
         } else {
-            ShowToastMessage({
-                title: "get project",
-                message: "Lấy dự án không thành công",
-                type: "error",
-              });
+          ShowToastMessage({
+            title: "get project",
+            message: "Lấy dự án không thành công",
+            type: "error",
+          });
         }
       } catch (error) {
         console.log(
@@ -86,7 +116,7 @@ const FormCreateReceiver = () => {
       }
     };
     fetchAllProjectByFunds();
-  }, []);
+  }, [fundIdSlected]);
 
   useEffect(() => {
     const disconnectWallet = async () => {
@@ -110,6 +140,10 @@ const FormCreateReceiver = () => {
     };
   }, []); // Chỉ chạy một lần khi component được mount
 
+  const handleInpuTFundIdChange = (e) => {
+    const { name, value } = e.target;
+    setFundIdSelected(value);
+  };
   const handleInputChange = (e) => {
     const { name, value } = e.target;
 
@@ -251,6 +285,30 @@ const FormCreateReceiver = () => {
         </Grid>
 
         <Grid item size={4}>
+          {/* Fund ID (Dropdown) */}
+          <FormControl fullWidth margin="normal">
+            <TextField
+              id="fundId"
+              name="fund_id"
+              value={fundIdSlected}
+              onChange={handleInpuTFundIdChange}
+              label="Tổ chức Quỹ"
+              fullWidth
+              variant="standard"
+              required
+              select
+              helperText="Hãy chọn Quỹ mà bạn muốn tạo dự án"
+            >
+              {fundListForCurrUser.map((fund) => (
+                <MenuItem key={fund.id} value={fund.id}>
+                  {fund.name_fund}
+                </MenuItem>
+              ))}
+            </TextField>
+          </FormControl>
+        </Grid>
+
+        <Grid item size={4}>
           {/* Status (Dropdown) */}
           <FormControl fullWidth margin="normal">
             <TextField
@@ -272,7 +330,36 @@ const FormCreateReceiver = () => {
             </TextField>
           </FormControl>
         </Grid>
+      </Grid>
 
+      <Grid container spacing={2}>
+        {/* Wallet Address */}
+        <Grid size={8}>
+          <FormControl fullWidth margin="normal">
+            <TextField
+              label="Wallet Address"
+              name="receiver_wallet_address"
+              value={formData.receiver_wallet_address ?? ""}
+              onChange={handleInputChange}
+              fullWidth
+              required
+              InputProps={{
+                endAdornment:
+                  isValidAddress !== null &&
+                  (isValidAddress ? (
+                    <CheckCircleOutlineIcon color="success" />
+                  ) : (
+                    <ErrorOutlineIcon color="error" />
+                  )),
+              }}
+            />
+            {errorMessage && (
+              <Typography variant="body2" color="error">
+                {errorMessage}
+              </Typography>
+            )}
+          </FormControl>
+        </Grid>
         <Grid item size={4}>
           {/* Type (Dropdown) */}
           <FormControl fullWidth margin="normal">
@@ -294,34 +381,6 @@ const FormCreateReceiver = () => {
             </TextField>
           </FormControl>
         </Grid>
-      </Grid>
-
-      <>
-        {/* Wallet Address */}
-        <FormControl fullWidth margin="normal">
-          <TextField
-            label="Wallet Address"
-            name="receiver_wallet_address"
-            value={formData.receiver_wallet_address ?? ""}
-            onChange={handleInputChange}
-            fullWidth
-            required
-            InputProps={{
-              endAdornment:
-                isValidAddress !== null &&
-                (isValidAddress ? (
-                  <CheckCircleOutlineIcon color="success" />
-                ) : (
-                  <ErrorOutlineIcon color="error" />
-                )),
-            }}
-          />
-          {errorMessage && (
-            <Typography variant="body2" color="error">
-              {errorMessage}
-            </Typography>
-          )}
-        </FormControl>
         {/* Pera Wallet Connect Button */}
         {walletConnected ? (
           <Typography variant="body2" color="green" gutterBottom>
@@ -337,7 +396,7 @@ const FormCreateReceiver = () => {
             Connect via Pera Wallet
           </Button>
         )}
-      </>
+      </Grid>
       {/* Submit Button */}
       <Grid container spacing={2} sx={{ mt: 2 }}>
         <Grid item xs={12}>

@@ -18,17 +18,26 @@ import {
   Typography,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+// import {
+//   BarChart,
+//   Bar,
+//   XAxis,
+//   YAxis,
+//   CartesianGrid,
+//   Tooltip,
+//   ResponsiveContainer,
+// } from "recharts";
 import styled from "@mui/material/styles/styled";
-import { formatAmountVND, formatAlgoAmount } from "utils/functions";
+import { Line, Bar } from "react-chartjs-2";
+import {
+  formatAmountVND,
+  formatAlgoAmount,
+  getWeekFromTimestamp,
+  getGroupedByDay,
+} from "utils/functions";
+import cfg from "configs";
+import DonationChart from "./DonationChart";
+
 // Styled component for pagination
 const CustomTablePagination = styled(TablePagination)({
   backgroundColor: "#f5f5f5",
@@ -41,6 +50,31 @@ const CustomTablePagination = styled(TablePagination)({
   },
 });
 
+const transactions = [
+  {
+    "round-time": 1729443664,
+    "payment-transaction": { amount: 308188 },
+  },
+  {
+    "round-time": 1729443422,
+    "payment-transaction": { amount: 3081883 },
+  },
+  {
+    "round-time": 1729441641,
+    "payment-transaction": { amount: 1539888 },
+  },
+  {
+    "round-time": 1729440929,
+    "payment-transaction": { amount: 1000000 },
+  },
+  // thêm các giao dịch khác ở đây...
+];
+const groupedByDay = getGroupedByDay(transactions);
+const dataByDay = Object.entries(groupedByDay).map(([date, amount]) => ({
+  date,
+  amount,
+}));
+console.log("🚀 ~ dataByDay ~ dataByDay:", dataByDay);
 // Main component
 const SupportersList = (props) => {
   const [supporters, setSupporters] = useState([]); // State to hold supporters data
@@ -48,64 +82,45 @@ const SupportersList = (props) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [timeRange, setTimeRange] = useState("daily");
-  const [exchangeRate, setExchangeRate] = useState(0); // To store ALGO to VND exchange rate
 
-  // Fetch the exchange rate from CoinGecko (or another API)
-  const fetchExchangeRate = async () => {
-    try {
-      const response = await fetch(
-        "https://api.coingecko.com/api/v3/simple/price?ids=algorand&vs_currencies=vnd"
-      );
-      const data = await response.json();
-      setExchangeRate(data.algorand.vnd); // Set the exchange rate for ALGO to VND
-    } catch (error) {
-      console.error("Error fetching exchange rate:", error);
-    }
-  };
-  const fetchSupporters = async (rate) => {
-    try {
-      const indexerUrl = "https://testnet-idx.algonode.cloud"; // Replace with your Algorand Indexer API URL
-      const address =
-        props.walletAddress ||
-        "MQZFSTFJAI7FYMHNGQBIBQ3WKM4SYHJFYILT6MNM5B65I7DNQONCEVKOOA"; // Replace with your Algorand address
-
-      // Fetch transactions for the address
-      const url = `${indexerUrl}/v2/transactions?limit=100&address=${address}`;
-      const response = await fetch(url);
-      const data = await response.json();
-
-      console.log("🚀 ~ fetchSupporters ~ data:", data);
-
-      const formattedSupporters = data.transactions
-        .filter((tx) => tx["payment-transaction"].receiver === address)
-        .map((tx) => {
-          const algoAmount = tx["payment-transaction"].amount / 1e6; // Convert microAlgos to Algos
-          const vndAmount = algoAmount * rate; // Convert ALGO to VND
-          console.log("🚀 ~ formattedSupporters ~ rate:", rate);
-
-          return {
-            name: tx.sender, // Or the receiver based on your requirement
-            amountAlgo: formatAlgoAmount(algoAmount), // ALGO amount
-            amountVND: vndAmount.toFixed(0), // VND amount
-            time: new Date(tx["round-time"] * 1000).toLocaleString(), // Convert timestamp
-          };
-        });
-
-      setSupporters(formattedSupporters);
-    } catch (error) {
-      console.error("Error fetching supporters:", error);
-    }
-  };
   useEffect(() => {
-    fetchExchangeRate(); // Fetch the exchange rate on component mount
-  }, []);
+    // When exchange rate is set, fetch supporters data
+    const fetchSupporters = async (rate) => {
+      try {
+        const indexerUrl = cfg.algorand_indexer_server; // Replace with your Algorand Indexer API URL
+        const address =
+          props.walletAddress ||
+          "MQZFSTFJAI7FYMHNGQBIBQ3WKM4SYHJFYILT6MNM5B65I7DNQONCEVKOOA"; // Replace with your Algorand address
 
-  // When exchange rate is set, fetch supporters data
-  useEffect(() => {
-    if (exchangeRate !== null) {
-      fetchSupporters(exchangeRate);
-    }
-  }, [exchangeRate]); // Only run when exchangeRate is updated
+        // Fetch transactions for the address
+        const url = `${indexerUrl}/v2/transactions?limit=100&address=${address}`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        console.log("🚀 ~ fetchSupporters ~ data:", data);
+
+        const formattedSupporters = data.transactions
+          .filter((tx) => tx["payment-transaction"].receiver === address)
+          .map((tx) => {
+            const algoAmount = tx["payment-transaction"].amount / 1e6; // Convert microAlgos to Algos
+            const vndAmount = algoAmount * rate; // Convert ALGO to VND
+            // console.log("🚀 ~ formattedSupporters ~ rate:", rate);
+
+            return {
+              name: tx.sender, // Or the receiver based on your requirement
+              amountAlgo: formatAlgoAmount(algoAmount), // ALGO amount
+              amountVND: Math.round(vndAmount), // VND amount
+              time: new Date(tx["round-time"] * 1000).toLocaleString(), // Convert timestamp
+            };
+          });
+
+        setSupporters(formattedSupporters);
+      } catch (error) {
+        console.error("Error fetching supporters:", error);
+      }
+    };
+    fetchSupporters(props.exchangeRate);
+  }, []); // Only run when exchangeRate is updated
 
   const handleSearchChange = (event) => {
     setSearchQuery(event.target.value);
@@ -216,6 +231,10 @@ const SupportersList = (props) => {
           }
         />
       </TableContainer>
+
+      <Box sx={{ mt: 16 }}>
+        <DonationChart donationData={supporters} />
+      </Box>
     </Box>
   );
 };

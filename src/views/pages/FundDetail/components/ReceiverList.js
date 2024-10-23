@@ -29,6 +29,8 @@ import {
 } from "recharts";
 import styled from "@mui/material/styles/styled";
 import { formatAmountVND, formatAlgoAmount } from "utils/functions";
+import cfg from "configs";
+
 // Styled component for pagination
 const CustomTablePagination = styled(TablePagination)({
   backgroundColor: "#f5f5f5",
@@ -53,9 +55,7 @@ const ReceiverList = (props) => {
   // Fetch the exchange rate from CoinGecko (or another API)
   const fetchExchangeRate = async () => {
     try {
-      const response = await fetch(
-        "https://api.coingecko.com/api/v3/simple/price?ids=algorand&vs_currencies=vnd"
-      );
+      const response = await fetch(cfg.api_convert_Algo_to_VND);
       const data = await response.json();
       setExchangeRate(data.algorand.vnd); // Set the exchange rate for ALGO to VND
     } catch (error) {
@@ -64,7 +64,7 @@ const ReceiverList = (props) => {
   };
   const fetchSupporters = async (rate) => {
     try {
-      const indexerUrl = "https://testnet-idx.algonode.cloud"; // Replace with your Algorand Indexer API URL
+      const indexerUrl = cfg.algorand_indexer_server; // Replace with your Algorand Indexer API URL
       const address =
         props.walletAddress ||
         "MQZFSTFJAI7FYMHNGQBIBQ3WKM4SYHJFYILT6MNM5B65I7DNQONCEVKOOA"; // Replace with your Algorand address
@@ -81,7 +81,7 @@ const ReceiverList = (props) => {
         .map((tx) => {
           const algoAmount = tx["payment-transaction"].amount / 1e6; // Convert microAlgos to Algos
           const vndAmount = algoAmount * rate; // Convert ALGO to VND
-          console.log("🚀 ~ formattedSupporters ~ rate:", rate);
+          // console.log("🚀 ~ formattedSupporters ~ rate:", rate);
 
           return {
             name: tx.sender, // Or the receiver based on your requirement

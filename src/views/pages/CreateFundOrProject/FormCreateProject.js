@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+
 import {
   TextField,
   Button,
@@ -13,19 +14,23 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { styled } from "@mui/material/styles";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
-import dayjs from "dayjs";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import PreviewIcon from "@mui/icons-material/Preview";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+
+import useLocalStorage from "@rehooks/local-storage";
+import dayjs from "dayjs";
 
 import algosdk from "algosdk";
 import { PeraWalletConnect } from "@perawallet/connect";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
-import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 
 import DescriptionField from "./components/DescriptionField";
 import { getFundsForOneUser, createNewProject } from "network/ApiAxios";
 import { ShowToastMessage } from "utils/ShowToastMessage";
 import { isValidImageURL } from "utils/functions";
+
 const projectLable = {
   children: "Trẻ em",
   healthcare: "Y tế",
@@ -55,7 +60,7 @@ const ProjectForm = () => {
     wallet_address: "",
   });
 
-  const [funds, setFunds] = useState([]); // Fund IDs fetched from server
+  const [funds, setFunds] = useLocalStorage("fundListForCurrUser", []); // Fund IDs fetched from server
   const [isValidAddress, setIsValidAddress] = useState(null); // Track address validity
   const [errorMessage, setErrorMessage] = useState("");
   const [walletConnected, setWalletConnected] = useState(false);
@@ -446,8 +451,13 @@ const ProjectForm = () => {
                   height: 60,
                   objectFit: "cover",
                   borderRadius: "5px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                 }}
-              ></div>
+              >
+                <PreviewIcon />
+              </div>
             )}
             <Grid item xs={2}>
               <IconButton onClick={() => removeImageField(index)}>
