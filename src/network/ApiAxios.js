@@ -126,7 +126,7 @@ export const edit = async (userID, wallet_name, wallet_address) =>
   await instance.put(`/user/${userID}`, { wallet_name, wallet_address });
 
 export const getOneUserByEmail = async (email) =>
-  await instance.get(`/JSON.parse(projectList) : [];users?email=${email}`, {});
+  await instance.get(`/users?email=${email}`, {});
 
 export const addReceiverForOneProject = async (receiver) =>
   await instance.post("/receivers", { ...receiver });
@@ -185,3 +185,6 @@ export const createNewFund = async (fundDetail) => {
 };
 export const getFundsForOneUser = async (userId) =>
   await instance.get(`/funds/user/${userId}`, {});
+
+export const getOneFundForOneUser = async (userId, fundId) =>
+  await instance.get(`/funds/${fundId}/user/${userId}`, {});
