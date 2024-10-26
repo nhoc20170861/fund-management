@@ -80,8 +80,10 @@ const AdminNavbar = (props) => {
       const { data } = response;
       if (data.statusCode === 200) {
         localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
         localStorage.removeItem("userInfo");
+        localStorage.removeItem("userId");
+        localStorage.removeItem("projectListForCurrentUser");
+        localStorage.removeItem("fundListForCurrentUser");
         navigate("/");
       }
     }

@@ -29,12 +29,7 @@ import SearchIcon from "@mui/icons-material/Search";
 // } from "recharts";
 import styled from "@mui/material/styles/styled";
 import { Line, Bar } from "react-chartjs-2";
-import {
-  formatAmountVND,
-  formatAlgoAmount,
-  getWeekFromTimestamp,
-  getGroupedByDay,
-} from "utils/functions";
+import { formatAmountVND, formatAlgoAmount } from "utils/functions";
 import cfg from "configs";
 import DonationChart from "./DonationChart";
 
@@ -50,31 +45,6 @@ const CustomTablePagination = styled(TablePagination)({
   },
 });
 
-const transactions = [
-  {
-    "round-time": 1729443664,
-    "payment-transaction": { amount: 308188 },
-  },
-  {
-    "round-time": 1729443422,
-    "payment-transaction": { amount: 3081883 },
-  },
-  {
-    "round-time": 1729441641,
-    "payment-transaction": { amount: 1539888 },
-  },
-  {
-    "round-time": 1729440929,
-    "payment-transaction": { amount: 1000000 },
-  },
-  // thêm các giao dịch khác ở đây...
-];
-const groupedByDay = getGroupedByDay(transactions);
-const dataByDay = Object.entries(groupedByDay).map(([date, amount]) => ({
-  date,
-  amount,
-}));
-console.log("🚀 ~ dataByDay ~ dataByDay:", dataByDay);
 // Main component
 const SupportersList = (props) => {
   const [supporters, setSupporters] = useState([]); // State to hold supporters data

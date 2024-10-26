@@ -74,7 +74,7 @@ const Dashboard = (props) => {
                   <h6 className="text-uppercase text-light ls-1 mb-1">
                     Overview
                   </h6>
-                  <h2 className="text-white mb-0">Sales value</h2>
+                  <h2 className="text-white mb-0">Biểu đồ quyên góp</h2>
                 </div>
                 <div className="col">
                   <Nav className="justify-content-end" pills>
@@ -86,7 +86,7 @@ const Dashboard = (props) => {
                         href="#pablo"
                         onClick={(e) => toggleNavs(e, 1)}
                       >
-                        <span className="d-none d-md-block">Month</span>
+                        <span className="d-none d-md-block">Tháng</span>
                         <span className="d-md-none">M</span>
                       </NavLink>
                     </NavItem>
@@ -99,7 +99,7 @@ const Dashboard = (props) => {
                         href="#pablo"
                         onClick={(e) => toggleNavs(e, 2)}
                       >
-                        <span className="d-none d-md-block">Week</span>
+                        <span className="d-none d-md-block">Tuần</span>
                         <span className="d-md-none">W</span>
                       </NavLink>
                     </NavItem>
@@ -125,9 +125,9 @@ const Dashboard = (props) => {
               <Row className="align-items-center">
                 <div className="col">
                   <h6 className="text-uppercase text-muted ls-1 mb-1">
-                    Performance
+                    Số tiền
                   </h6>
-                  <h2 className="mb-0">Total orders</h2>
+                  <h2 className="mb-0">Tổng quyên góp hàng tháng</h2>
                 </div>
               </Row>
             </CardHeader>

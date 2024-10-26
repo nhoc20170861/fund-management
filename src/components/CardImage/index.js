@@ -59,6 +59,7 @@ const CardImage = ({
 }) => {
   const navigate = useNavigate();
   const progress = (currentAmount / targetAmount) * 100;
+
   // const [progress, setProgress] = React.useState(
   //   () => (currentAmount / targetAmount) * 100
   // );

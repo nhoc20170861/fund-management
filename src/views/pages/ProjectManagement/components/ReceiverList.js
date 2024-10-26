@@ -4,13 +4,13 @@ import Avatar from "@mui/material/Avatar";
 import { stringAvatar } from "utils/functions";
 import AvatarGroup from "@mui/material/AvatarGroup";
 
-const MemberList = ({ members = [] }) => {
+const ReceiverList = ({ receivers = [] }) => {
   return (
     // Avatar Group
 
     <AvatarGroup max={4} sx={{ justifyContent: "flex-start" }}>
-      {members &&
-        members.map((user, index) => (
+      {receivers &&
+        receivers.map((user, index) => (
           <>
             <a
               className="avatar avatar-sm"
@@ -32,4 +32,4 @@ const MemberList = ({ members = [] }) => {
   );
 };
 
-export default MemberList;
+export default ReceiverList;

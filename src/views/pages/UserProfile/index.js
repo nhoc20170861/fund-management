@@ -25,10 +25,15 @@ import Avatar from "@mui/material/Avatar";
 import HeaderCustom from "components/Headers/HeaderCustom.js";
 import MemberList from "./components/MemberList";
 import DropdownAction from "./components/DropdownAction";
-import { getFundsForOneUser, getAllUsers } from "network/ApiAxios";
+import { getFundsForOneUser } from "network/ApiAxios";
 import { ShowToastMessage } from "utils/ShowToastMessage";
 
-const RenderFundList = ({ fundList, users, currentPage, rowsPerPage }) => {
+const RenderFundList = ({
+  fundList,
+  currentPage,
+  rowsPerPage,
+  handleBtnClick,
+}) => {
   // Calculate the starting index of the items for the current page
   const startIndex = (currentPage - 1) * rowsPerPage;
   const selectedFunds = fundList.slice(startIndex, startIndex + rowsPerPage);
@@ -44,7 +49,10 @@ const RenderFundList = ({ fundList, users, currentPage, rowsPerPage }) => {
                     <a
                       className="avatar rounded-circle mr-3"
                       href="#pablo"
-                      onClick={(e) => e.preventDefault()}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleBtnClick(fund.id);
+                      }}
                     >
                       <img
                         alt="..."
@@ -68,7 +76,7 @@ const RenderFundList = ({ fundList, users, currentPage, rowsPerPage }) => {
                     justifyContent: "flex-start",
                   }}
                 >
-                  <MemberList users={users} members={fund.members}></MemberList>
+                  <MemberList members={fund.members}></MemberList>
                 </td>
                 <td>
                   <div className="d-flex align-items-center">
@@ -89,20 +97,21 @@ const RenderFundList = ({ fundList, users, currentPage, rowsPerPage }) => {
 };
 
 const UserProfile = () => {
-  const [users, setUsers] = useState([]);
   const [currentPage, setCurrentPage] = useState(1); // State to track the current page
   const navigate = useNavigate();
   const rowsPerPage = 5; // Set rows per page to 5
 
   const handleBtnClick = (fundId) => {
+    if (!fundId) return;
     const url = `/admin/fund-detail/${fundId}`;
     console.log("🚀 ~ file: index.js:107 ~ handleBtnClick ~ url:", url);
-  
+
     // Thực hiện điều hướng
     navigate(url);
   };
-  const [projectListForCurrentUser, setProjectListForCurrentUser] = useLocalStorage("projectListForCurrentUser", []);
-  
+  const [projectListForCurrentUser, setProjectListForCurrentUser] =
+    useLocalStorage("projectListForCurrentUser", []);
+
   const currentUserInfo = JSON.parse(localStorage.getItem("userInfo"));
   const [fundList, setFundList] = useLocalStorage("fundListForCurrentUser", []);
 
@@ -130,24 +139,13 @@ const UserProfile = () => {
         setFundList(data.body);
       } catch (error) {
         console.log(
-          "🚀 ~ file: index.js:223 ~ fetchAllTaskQueue ~ error:",
+          "🚀 ~ file: index.js:223 ~ fetchAllFundsForThisUser ~ error:",
           error
         );
       }
     };
 
-    const fetchAllUser = async () => {
-      try {
-        const response = await getAllUsers();
-        const { data } = response;
-        setUsers(data.body);
-      } catch (error) {
-        console.log("Error fetching users:", error);
-      }
-    };
-
     fetchAllFundsForThisUser();
-    fetchAllUser();
   }, []);
 
   // Handle page change
@@ -262,7 +260,7 @@ const UserProfile = () => {
                                 className="custom-border-box"
                                 type="button"
                                 id={`tooltip${index}`}
-                                onClick={() => handleBtnClick(fund.id ?? 1)}
+                                onClick={() => handleBtnClick(fund.id)}
                               >
                                 <Media className="align-items-center">
                                   <Avatar
@@ -337,8 +335,8 @@ const UserProfile = () => {
                 </thead>
                 <tbody>
                   <RenderFundList
+                    handleBtnClick={handleBtnClick}
                     fundList={fundList}
-                    users={users}
                     currentPage={currentPage}
                     rowsPerPage={rowsPerPage}
                   />

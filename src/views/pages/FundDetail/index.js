@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import algosdk from "algosdk";
-import DonationModal from "./components/DonationModal";
+
 import {
   Box,
   Card,
@@ -9,24 +9,7 @@ import {
   Avatar,
   Typography,
   Button,
-  Modal,
-  TextField,
   IconButton,
-  Checkbox,
-  FormControlLabel,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TablePagination,
-  TableRow,
-  Paper,
-  InputAdornment,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Tabs,
   Tab,
 } from "@mui/material";
@@ -34,24 +17,25 @@ import Grid from "@mui/material/Grid2";
 import LinearProgress from "@mui/material/LinearProgress";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
-import SearchIcon from "@mui/icons-material/Search";
 import { pink } from "@mui/material/colors";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import PhoneIcon from "@mui/icons-material/Phone";
 import EmailIcon from "@mui/icons-material/Email";
 import { styled } from "@mui/material/styles";
 import dayjs from "dayjs";
-import Slider from "react-slick"; // Thêm thư viện Slider
-import ReactMarkdown from "react-markdown";
-
 import { useLocalStorage } from "@rehooks/local-storage";
+
+import ReactMarkdown from "react-markdown";
+import Slider from "react-slick"; // Thêm thư viện Slider
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
+import DonationModal from "./components/DonationModal";
 import SupportersList from "./components/SupportersList";
 import ReceiverList from "./components/ReceiverList";
 import { getOneProjectDetail } from "network/ApiAxios";
 import { ShowToastMessage } from "utils/ShowToastMessage";
 import { formatAmountVND } from "utils/functions";
+
 import configs from "configs";
 
 // Styled components
@@ -347,7 +331,7 @@ const FundDetail = () => {
                     }}
                   >
                     <Typography variant="body1" sx={{ fontWeight: "500" }}>
-                      Đã quyên góp:
+                      Đã nhận quyên góp:
                     </Typography>
                     <Typography variant="body1" sx={{ fontWeight: "500" }}>
                       {`${formatAmountVND(

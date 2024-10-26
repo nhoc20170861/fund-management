@@ -108,6 +108,7 @@ instance.interceptors.response.use(
       localStorage.removeItem("userInfo");
       localStorage.removeItem("userId");
       localStorage.removeItem("projectListForCurrentUser");
+      localStorage.removeItem("fundListForCurrentUser");
       alert("✈️✈️ Bạn cần đăng nhập lại ✈️✈️");
       await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate loading
       // Redirect to the homepage
@@ -171,6 +172,9 @@ export const createNewProject = async (projectDetail) =>
 
 export const getProjectDetailByUserAndFundId = async (userId, fundId) =>
   await instance.get(`/projects/filter/user/${userId}/fund/${fundId}`, {});
+
+export const updateProjectFunding = async (project_id, payload) =>
+  await instance.put(`/projects/${project_id}/addFund`, { ...payload });
 
 // ===================== API cho phan contribute =====================
 export const addContributeTranstaction = async (projectId, contributes_trans) =>

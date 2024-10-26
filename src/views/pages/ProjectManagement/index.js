@@ -27,7 +27,10 @@ import dayjs from "dayjs";
 // core components
 import HeaderCustom from "components/Headers/HeaderCustom.js";
 // import network
-import { getProjectDetailByUserAndFundId } from "../../../network/ApiAxios";
+import {
+  getProjectDetailByUserAndFundId,
+  getOneFundForOneUser,
+} from "../../../network/ApiAxios";
 
 import {
   writeStorage,
@@ -38,6 +41,7 @@ import {
 import ProjectDetail from "./components/ProjectDetail";
 import CardGallery from "./components/CardGallery"; // Import component CardImage
 const FundInfo = ({
+  userId,
   fundListForCurrentUser,
   projectComplete,
   activeProjects,
@@ -46,10 +50,31 @@ const FundInfo = ({
   const [fundData, setFundData] = useState({});
 
   useEffect(() => {
-    const found = fundListForCurrentUser.find((fund) => fund.id == fundId);
-    console.log("🚀 ~ useEffect ~ found:", found);
-    setFundData(found);
-  }, [fundListForCurrentUser, fundId]);
+    const fetchOneFundByUser = async () => {
+      try {
+        const response = await getOneFundForOneUser(userId, fundId);
+
+        const { data } = response;
+        console.log("🚀 ~ fetchOneFundByUser ~ data:", data);
+
+        if (data.statusCode === 200 && data.body.id) {
+          setFundData(data.body);
+        } else {
+          ShowToastMessage({
+            title: "Get one fund data",
+            message: "Quỹ không có dữ liệu",
+            type: "warning",
+          });
+        }
+      } catch (error) {
+        console.log(
+          "🚀 ~ file: index.js:223 ~ fetchOneFundByUser ~ error:",
+          error
+        );
+      }
+    };
+    fetchOneFundByUser();
+  }, [fundId, userId]);
 
   return fundData ? (
     <Card sx={{ boxShadow: 3, p: 2 }}>
@@ -145,6 +170,7 @@ const ProjectManagement = () => {
     "fundListForCurrentUser",
     {}
   );
+  const userId = localStorage.getItem("userId");
   const navigate = useNavigate();
   const location = useLocation();
   const { fundId } = useParams();
@@ -154,7 +180,6 @@ const ProjectManagement = () => {
   useEffect(() => {
     const fetchAllProjectForCurrentFund = async () => {
       try {
-        const userId = localStorage.getItem("userId");
         const response = await getProjectDetailByUserAndFundId(userId, fundId);
 
         const { data } = response;
@@ -191,7 +216,7 @@ const ProjectManagement = () => {
       }
     };
     fetchAllProjectForCurrentFund();
-  }, [fundId]);
+  }, [fundId, userId]);
 
   // Hàm điều hướng trở lại trang danh sách project
   const handleBackClick = () => {
@@ -217,6 +242,7 @@ const ProjectManagement = () => {
           <Row>
             <Box sx={{ width: "100%", padding: "20px" }}>
               <FundInfo
+                userId={userId}
                 fundListForCurrentUser={fundListForCurrentUser}
                 projectComplete={completedProjects?.length || 0}
                 activeProjects={activeProjects?.length || 0}

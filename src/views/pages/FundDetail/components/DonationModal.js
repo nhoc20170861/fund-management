@@ -14,13 +14,17 @@ import {
 import Grid from "@mui/material/Grid2";
 import algosdk from "algosdk";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy"; // Icon for copy
+import CircularProgress from "@mui/material/CircularProgress";
 
 import QrCodeIcon from "@mui/icons-material/QrCode2"; // Icon for QR Code
 import { QRCodeCanvas } from "qrcode.react"; // Library for generating QR code
 
 import { PeraWalletConnect } from "@perawallet/connect";
 import { ShowToastMessage } from "utils/ShowToastMessage";
-import { addContributeTranstaction } from "network/ApiAxios";
+import {
+  addContributeTranstaction,
+  updateProjectFunding,
+} from "network/ApiAxios";
 
 import CustomAlert from "components/CustomAlert"; // Import CustomAlert
 import configs from "configs";
@@ -47,8 +51,10 @@ const DonationModal = ({
   const [userAddress, setUserAddress] = useState(null);
   const [transactionId, setTransactionId] = useState("");
   const [openQRModal, setOpenQRModal] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState(() => ({
     project_id: projectId,
+    txid: 0,
     amount: 0,
     email: "",
     sodienthoai: "",
@@ -56,9 +62,8 @@ const DonationModal = ({
     name: "",
     type_sender_wallet: "pera",
     sender_wallet_address: "",
-    receiver_wallet_addres: "",
-    transaction_id: 0,
-    roundTime: 0,
+    project_wallet_address: "",
+    time_round: 0,
   }));
   // Toggle the QR code modal
   const toggleQRModal = () => {
@@ -176,7 +181,7 @@ const DonationModal = ({
         ...prev,
         current_fund: Number(balanceInVND.toFixed(0)),
       }));
-      return balanceInVND;
+      return Number(balanceInVND.toFixed(0));
     } catch (error) {
       console.error("Lỗi khi kiểm tra số dư tài khoản:", error);
       throw error;
@@ -213,9 +218,15 @@ const DonationModal = ({
     }
   }
 
+  React.useEffect(() => {
+    if (open === false) {
+      setTransactionId("");
+    }
+  }, [open]);
+
   const sendTransaction = async () => {
     if (!walletConnected) {
-      alert("Bạn cần kết nối với ví trước!");
+      alert("😭🤗 Bạn cần kết nối với ví trước!");
       return;
     }
     console.log(
@@ -223,16 +234,18 @@ const DonationModal = ({
       projectWalletAddress
     );
     if (!projectWalletAddress) {
-      alert("Địa chỉ ví dự án không hợp lệ!");
+      alert("😭🤔 Địa chỉ ví dự án không hợp lệ!");
       return;
     }
     if (!userAddress) {
-      alert("Địa chỉ ví của bạn không hợp lệ!");
+      alert("😭😑 Địa chỉ ví của bạn không hợp lệ!");
       return;
     }
     // Check if the userAddress and projectWalletAddress are the same
     if (userAddress === projectWalletAddress) {
-      alert("Địa chỉ người gửi và người nhận không thể giống nhau!");
+      alert(
+        "🤗😓 Sorry! Địa chỉ người gửi và người nhận không thể giống nhau!"
+      );
       return; // Dừng nếu địa chỉ giống nhau
     }
     console.log("🚀 ~ sendTransaction ~ userAddress:", userAddress);
@@ -240,12 +253,7 @@ const DonationModal = ({
     // Call the function to print the node status
     // getNodeStatus();
 
-    // const acctInfo = await algodClient
-    //     .accountInformation(projectWalletAddress)
-    //     .do();
-
     // const acctInfoUser = await algodClient.accountInformation(userAddress).do();
-    // console.log(`Account balance: ${acctInfo.amount} microAlgos`);
     // console.log(
     //     `Account balance userAddress: ${acctInfoUser.amount} microAlgos`
     // );
@@ -259,6 +267,7 @@ const DonationModal = ({
     const suggestedParams = await algodClient.getTransactionParams().do();
     console.log("Suggested Params:", suggestedParams);
 
+    setLoading(true);
     // Generate transaction group
     const txGroups = await generatePaymentTxns({
       sender: userAddress,
@@ -274,8 +283,8 @@ const DonationModal = ({
     // handleCloseModal();
 
     let signedTxn; // Khai báo signedTxn ở bên ngoài khối try-catch
-    let txid; // Khai báo txid ở ngoài để dùng sau khi gửi giao dịch
-    let roundTime; // Khai báo roundTime để dùng sau khi lấy từ indexer
+    let txid = ""; // Khai báo txid ở ngoài để dùng sau khi gửi giao dịch
+    let roundTime = ""; // Khai báo roundTime để dùng sau khi lấy từ indexer
     try {
       // Sign the transaction using Pera Wallet
       signedTxn = await peraWallet.signTransaction([txGroups]);
@@ -328,7 +337,7 @@ const DonationModal = ({
       );
       return;
     }
-
+    setLoading(false);
     ShowToastMessage({
       title: "Payment Transaction",
       message: `Giao dịch thành công!`,
@@ -337,33 +346,65 @@ const DonationModal = ({
 
     try {
       // Save transaction info to the database
-
+      const acctInfo = await algodClient
+        .accountInformation(projectWalletAddress)
+        .do();
+      console.log(`Account balance: ${acctInfo.amount} microAlgos`);
       const newContribute_trans = {
         ...formData,
         amount: donationAmount,
         sender_wallet_address: userAddress,
-        receiver_wallet_addres: projectWalletAddress,
-        transaction_id: txid,
-        roundTime: roundTime,
+        project_wallet_address: projectWalletAddress,
+        txid: txid,
+        time_round: new Date(roundTime * 1000),
       };
+
       if (anonymous) {
         newContribute_trans.sodienthoai = "";
         newContribute_trans.address = "";
         newContribute_trans.name = "";
       }
-
+      newContribute_trans.current_fund_wallet = await checkAccountBalance(
+        projectWalletAddress
+      );
       console.log(
         "🚀 ~ addContributeTranstaction ~ newContribute_trans:",
         newContribute_trans
       );
+
+      // const current_fund_project = await checkAccountBalance(
+      //   projectWalletAddress
+      // );
+      // const updateProject = {
+      //   current_fund: current_fund_project,
+      //   email: formData.email,
+      //   sodienthoai: formData.sodienthoai,
+      //   address: formData.address,
+      //   name: formData.name,
+      //   type_sender_wallet: formData.type_sender_wallet,
+      //   sender_wallet_address: userAddress,
+      // };
+
+      // if (anonymous) {
+      //   delete updateProject.sodienthoai;
+      //   delete updateProject.address;
+      //   delete updateProject.name;
+      //   delete updateProject.email;
+      // }
+      // console.log(
+      //   "🚀 ~ addContributeTranstaction ~ newContribute_trans:",
+      //   updateProject
+      // );
 
       const response = await addContributeTranstaction(
         projectId,
         newContribute_trans
       );
 
+      // const response = await updateProjectFunding(projectId, updateProject);
+
       const { data } = response;
-      console.log("🚀 ~ addContributeTranstaction ~ data:", response);
+      console.log("🚀 ~ updateProjectFunding ~ data:", response);
       if (data?.statusCode === 200) {
         ShowToastMessage({
           title: "Store transtaction",
@@ -386,7 +427,6 @@ const DonationModal = ({
       });
     }
 
-    checkAccountBalance(projectWalletAddress);
     // alert("Giao dịch thành công!");
   };
 
@@ -587,7 +627,9 @@ const DonationModal = ({
             )}
             {transactionId && (
               <div>
-                <p>Giao dịch thành công với TxID: {transactionId}</p>
+                <p style={{ color: "black" }}>
+                  Giao dịch thành công với TxID: {transactionId}
+                </p>
               </div>
             )}
 
@@ -643,6 +685,26 @@ const DonationModal = ({
           <Button variant="contained" onClick={toggleQRModal} sx={{ mt: 2 }}>
             Đóng
           </Button>
+        </Box>
+      </Modal>
+      <Modal open={loading} onClose={() => setLoading(false)}>
+        {/* Nội dung của modal loading, ví dụ: */}
+        <Box
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            backgroundColor: "#fff",
+            padding: "20px",
+            borderRadius: "10px",
+          }}
+        >
+          <Typography variant="h6" component="h2" gutterBottom>
+            Loading...
+            <CircularProgress />
+          </Typography>
+          {/* Thêm nội dung hoặc hình ảnh loading ở đây */}
         </Box>
       </Modal>
     </>

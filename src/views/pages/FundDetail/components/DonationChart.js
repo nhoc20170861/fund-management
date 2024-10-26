@@ -105,7 +105,7 @@ const DonationChart = ({ donationData }) => {
             />
             <YAxis
               label={{
-                value: "Số Tiền (VND)",
+                // value: "(VND)",
                 angle: -90,
                 position: "insideLeft",
               }}
