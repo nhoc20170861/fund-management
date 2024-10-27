@@ -58,6 +58,7 @@ const ProjectForm = () => {
     deadline: null,
     linkcardImage: [""],
     wallet_address: "",
+    wallet_type: "pera",
   });
 
   const [funds, setFunds] = useLocalStorage("fundListForCurrUser", []); // Fund IDs fetched from server
@@ -195,7 +196,7 @@ const ProjectForm = () => {
 
       try {
         console.log("Submitted Project Data:", finalData);
-        finalData.project_hash = formData.wallet_address;
+
         const response = await createNewProject(finalData);
         const { data } = response;
         if (data.id) {

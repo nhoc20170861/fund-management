@@ -40,13 +40,7 @@ import {
 
 import ProjectDetail from "./components/ProjectDetail";
 import CardGallery from "./components/CardGallery"; // Import component CardImage
-const FundInfo = ({
-  userId,
-  fundListForCurrentUser,
-  projectComplete,
-  activeProjects,
-  fundId,
-}) => {
+const FundInfo = ({ userId, projectComplete, activeProjects, fundId }) => {
   const [fundData, setFundData] = useState({});
 
   useEffect(() => {
@@ -210,7 +204,7 @@ const ProjectManagement = () => {
         setCompletedProjects(completed);
       } catch (error) {
         console.log(
-          "🚀 ~ file: index.js:223 ~ fetchAllTaskQueue ~ error:",
+          "🚀 ~ file: index.js:223 ~ FetchAllProejctForCurrentFund ~ error:",
           error
         );
       }

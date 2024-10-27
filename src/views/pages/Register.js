@@ -95,27 +95,31 @@ const Register = () => {
       birthDay,
     };
 
-    console.log("🚀 ~ registerUser ~ payload:", payload);
-    const response = await register(payload);
+    try {
+      console.log("🚀 ~ registerUser ~ payload:", payload);
+      const response = await register(payload);
 
-    const { data } = response;
-    if (data.statusCode !== 200) {
-      setError("Something went wrong, please try again");
-      return;
+      const { data } = response;
+      if (data.statusCode !== 200) {
+        setError("Something went wrong, please try again");
+        return;
+      }
+      if (configs.DEMO) {
+        setToastMessage(
+          "This is a demo, so we will not send you an email. Instead, click on this link to verify your account:"
+        );
+        setUserID(data.user.id || null);
+      }
+      setError("");
+      setYourName("");
+      setEmail("");
+      setPassword("");
+      setConfirmPassword("");
+      setCheckbox(false);
+      setShowToast(true);
+    } catch (error) {
+      console.log("🚀 ~ file: Login.js:61 ~ tryRegister ~ error:", error);
     }
-    if (configs.DEMO) {
-      setToastMessage(
-        "This is a demo, so we will not send you an email. Instead, click on this link to verify your account:"
-      );
-      setUserID(data.user.id || null);
-    }
-    setError("");
-    setYourName("");
-    setEmail("");
-    setPassword("");
-    setConfirmPassword("");
-    setCheckbox(false);
-    setShowToast(true);
   };
 
   return (

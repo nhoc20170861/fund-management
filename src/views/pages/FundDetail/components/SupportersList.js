@@ -11,24 +11,10 @@ import {
   TextField,
   InputAdornment,
   Paper,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Typography,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-// import {
-//   BarChart,
-//   Bar,
-//   XAxis,
-//   YAxis,
-//   CartesianGrid,
-//   Tooltip,
-//   ResponsiveContainer,
-// } from "recharts";
+
 import styled from "@mui/material/styles/styled";
-import { Line, Bar } from "react-chartjs-2";
 import { formatAmountVND, formatAlgoAmount } from "utils/functions";
 import cfg from "configs";
 import DonationChart from "./DonationChart";
@@ -51,7 +37,6 @@ const SupportersList = (props) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [timeRange, setTimeRange] = useState("daily");
 
   useEffect(() => {
     // When exchange rate is set, fetch supporters data
@@ -90,7 +75,7 @@ const SupportersList = (props) => {
       }
     };
     fetchSupporters(props.exchangeRate);
-  }, []); // Only run when exchangeRate is updated
+  }, []);
 
   const handleSearchChange = (event) => {
     setSearchQuery(event.target.value);
@@ -105,26 +90,9 @@ const SupportersList = (props) => {
     setPage(0);
   };
 
-  const handleTimeRangeChange = (event) => {
-    setTimeRange(event.target.value);
-  };
-
   const filteredSupporters = supporters.filter((supporter) =>
     supporter.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  const getChartData = () => {
-    // Transform data for the chart
-    return filteredSupporters.map((supporter) => ({
-      name: supporter.name,
-      amount: supporter.amount,
-    }));
-  };
-
-  const getXAxisKey = () => {
-    // Return key for the X axis
-    return "name";
-  };
 
   return (
     <Box sx={{ marginTop: "1rem" }}>

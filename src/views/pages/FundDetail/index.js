@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import algosdk from "algosdk";
 
 import {
   Box,
@@ -115,7 +114,7 @@ const FundDetail = () => {
         }
       } catch (error) {
         console.log(
-          "🚀 ~ file: index.js:223 ~ fetchAllTaskQueue ~ error:",
+          "🚀 ~ file: index.js:223 ~ fetchOneProjectDetail ~ error:",
           error
         );
       } finally {
@@ -525,13 +524,13 @@ const FundDetail = () => {
             {tabIndex === 1 && (
               <SupportersList
                 exchangeRate={exchangeRate}
-                walletAddress={projectDetail.project_hash}
+                walletAddress={projectDetail.wallet_address}
               />
             )}
             {tabIndex === 2 && (
               <ReceiverList
                 exchangeRate={exchangeRate}
-                walletAddress={projectDetail.project_hash}
+                walletAddress={projectDetail.wallet_address}
               />
             )}
           </>
@@ -540,7 +539,7 @@ const FundDetail = () => {
       {/* Modal để nhập thông tin người dùng */}
       <DonationModal
         exchangeRate={exchangeRate}
-        walletAddress={projectDetail.project_hash}
+        walletAddress={projectDetail.wallet_address}
         open={open}
         handleCloseModal={handleCloseModal}
         donationAmount={donationAmount}

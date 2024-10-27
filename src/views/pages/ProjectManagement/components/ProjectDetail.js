@@ -43,14 +43,6 @@ import { ShowToastMessage } from "utils/ShowToastMessage";
 import { formatAmountVND } from "utils/functions";
 import ReceiverList from "./ReceiverList";
 
-// Styled components
-const StyledCard = styled(MuiCard)(({ theme }) => ({
-  //   display: "flex",
-  //   flexDirection: "row",
-  padding: theme.spacing(2),
-  height: 400, // Đặt chiều cao cố định cho card
-}));
-
 const ProgressContainer = styled(Box)(({ theme }) => ({
   marginTop: theme.spacing(2),
 }));
@@ -78,8 +70,7 @@ const ProjectDetail = (props) => {
   useEffect(() => {
     const fetchOneProjectForThisUser = async () => {
       try {
-        const userId = localStorage.getItem("userId");
-        const response = await getOneProjectDetail(userId);
+        const response = await getOneProjectDetail(props.projectId);
 
         const { data } = response;
         console.log("🚀 ~ fetchOneProjectForThisUser ~ data:", data);
@@ -181,7 +172,7 @@ const ProjectDetail = (props) => {
               <Row>
                 <>
                   {/* Bên trái: Carousel ảnh chiếm 1/2 */}
-                  <Col style={{ width: "50%", height: "fit-content" }} xl="6">
+                  <Col style={{ height: "fit-content" }} xl="6">
                     <Slider
                       {...settings}
                       ref={(slider) => {
@@ -208,9 +199,15 @@ const ProjectDetail = (props) => {
                   </Col>
 
                   {/* Bên phải: UI control chiếm 1/2 */}
-                  <Col style={{ width: "50%", paddingLeft: 2 }} xl="6">
+                  <Col style={{ paddingLeft: 2 }} xl="6">
                     <StyledBox
-                      sx={{ width: "100%", margin: "auto", padding: 3 }}
+                      sx={{
+                        width: "100%",
+                        margin: "auto",
+                        padding: 3,
+                        paddingBottom: 0,
+                        minHeight: "20.5rem",
+                      }}
                     >
                       {/* Nhóm 1 */}
                       <Typography
@@ -549,7 +546,7 @@ const ProjectDetail = (props) => {
           </Col>
           </Row> */}
 
-        <Dashboard />
+        <Dashboard walletAddress={projectInfo.wallet_address} />
       </Container>
     </>
   );

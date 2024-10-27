@@ -60,13 +60,6 @@ const CardImage = ({
   const navigate = useNavigate();
   const progress = (currentAmount / targetAmount) * 100;
 
-  // const [progress, setProgress] = React.useState(
-  //   () => (currentAmount / targetAmount) * 100
-  // );
-  // useEffect(
-  //   () => setProgress((currentAmount / targetAmount) * 100),
-  //   [currentAmount, targetAmount]
-  // );
   const isProjectEnded = dayjs(deadline).isBefore(dayjs());
   const formattedDeadline = isProjectEnded
     ? "Dự án đã kết thúc"
@@ -100,11 +93,11 @@ const CardImage = ({
   };
 
   const onFundClick = () => {
-    const prject_name = convertToSlug(projectName ?? "unknown");
+    const project_name = convertToSlug(projectName ?? "unknown");
     if (!id || !Number.isInteger(id)) {
       id = 1;
     }
-    navigate(`/du-an/${prject_name}/${id}`);
+    navigate(`/du-an/${project_name}/${id}`);
   };
 
   return (

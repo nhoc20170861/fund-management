@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import dayjs from "dayjs"; // Importing dayjs package
-import weekOfYear from "dayjs/plugin/weekOfYear";
 
 import {
   Box,
@@ -21,10 +20,9 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-import { format } from "dayjs"; // Update the import for 'format' to use 'dayjs' instead of 'date-fns'
 import { groupBy, sumBy } from "lodash";
 import _ from "lodash";
-dayjs.extend(weekOfYear);
+
 const DonationChart = ({ donationData }) => {
   console.log("🚀 ~ DonationChart ~ donationData:", donationData);
   const [timeRange, setTimeRange] = useState("daily");
@@ -109,7 +107,13 @@ const DonationChart = ({ donationData }) => {
                 angle: -90,
                 position: "insideLeft",
               }}
-              tickFormatter={(value) => value.toLocaleString("vi-VN")}
+              tickFormatter={(value) => {
+                if (!(value % 10)) {
+                  return value / 1000 + " kđ";
+                }
+
+                return value.toLocaleString("vi-VN");
+              }}
             />
             <Tooltip
               formatter={(value) =>

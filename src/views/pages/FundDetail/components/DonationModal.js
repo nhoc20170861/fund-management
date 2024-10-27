@@ -177,10 +177,6 @@ const DonationModal = ({
       console.log(
         `Số dư tài khoản ${projectWalletAddress}: ${balance} microAlgos (${balanceInVND} VND)`
       );
-      setProjectDetail((prev) => ({
-        ...prev,
-        current_fund: Number(balanceInVND.toFixed(0)),
-      }));
       return Number(balanceInVND.toFixed(0));
     } catch (error) {
       console.error("Lỗi khi kiểm tra số dư tài khoản:", error);
@@ -346,17 +342,17 @@ const DonationModal = ({
 
     try {
       // Save transaction info to the database
-      const acctInfo = await algodClient
-        .accountInformation(projectWalletAddress)
-        .do();
-      console.log(`Account balance: ${acctInfo.amount} microAlgos`);
+      // const acctInfo = await algodClient
+      //   .accountInformation(projectWalletAddress)
+      //   .do();
+      // console.log(`Account balance: ${acctInfo.amount} microAlgos`);
       const newContribute_trans = {
         ...formData,
         amount: donationAmount,
         sender_wallet_address: userAddress,
         project_wallet_address: projectWalletAddress,
         txid: txid,
-        time_round: new Date(roundTime * 1000),
+        time_round: roundTime,
       };
 
       if (anonymous) {
@@ -364,37 +360,19 @@ const DonationModal = ({
         newContribute_trans.address = "";
         newContribute_trans.name = "";
       }
-      newContribute_trans.current_fund_wallet = await checkAccountBalance(
+      const project_current_fund = await checkAccountBalance(
         projectWalletAddress
       );
+      newContribute_trans.project_current_fund = project_current_fund;
+      setProjectDetail((prev) => ({
+        ...prev,
+        current_fund: project_current_fund,
+        fund_raise_count: prev.fund_raise_count + 1,
+      }));
       console.log(
         "🚀 ~ addContributeTranstaction ~ newContribute_trans:",
         newContribute_trans
       );
-
-      // const current_fund_project = await checkAccountBalance(
-      //   projectWalletAddress
-      // );
-      // const updateProject = {
-      //   current_fund: current_fund_project,
-      //   email: formData.email,
-      //   sodienthoai: formData.sodienthoai,
-      //   address: formData.address,
-      //   name: formData.name,
-      //   type_sender_wallet: formData.type_sender_wallet,
-      //   sender_wallet_address: userAddress,
-      // };
-
-      // if (anonymous) {
-      //   delete updateProject.sodienthoai;
-      //   delete updateProject.address;
-      //   delete updateProject.name;
-      //   delete updateProject.email;
-      // }
-      // console.log(
-      //   "🚀 ~ addContributeTranstaction ~ newContribute_trans:",
-      //   updateProject
-      // );
 
       const response = await addContributeTranstaction(
         projectId,
