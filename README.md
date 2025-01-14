@@ -5,6 +5,80 @@
 
 ![Product Gif](./assets/demo_dashboard.gif)
 
+
+## Detailed Description
+**Backend (FastAPI)**
+
+link: https://github.com/nhoc20170861/algomind-be
+
+1. User Authentication:
+    * Implements a secure user authentication system using FastAPI.
+    * Supports features such as user registration, login, password hashing, and JWT-based session management.
+    * Ensures compliance with modern security practices like rate limiting and password encryption.
+
+2. Charity Fund Management:
+
+    * Provides APIs for creating, updating, and managing charity funds.
+    * Tracks fund performance and aggregates donations from various transactions.
+
+3. Project Management for Charity Funds:
+
+    * Enables CRUD (Create, Read, Update, Delete) operations on projects associated with specific charity funds.
+    * Allows fund administrators to allocate resources to projects and track progress.
+
+4. Transaction Handling:
+
+    * Integrates with the Algorand blockchain through AlgoSDK to record and verify transactions.
+    * Handles incoming transactions, validates data, and stores transaction records in the database.
+    * Computes and stores relevant metrics, such as total donations and donor participation.
+
+**Database (PostgreSQL)**
+
+1. User Data:
+Stores user profiles, including authentication credentials, personal information, and access roles.
+
+2. Charity Fund and Project Data:
+
+    * Maintains records of all charity funds and their associated projects.
+    * Tracks project-specific details such as budgets, milestones, and fund allocations.
+
+3. Transaction Data:
+
+    * Logs all transactions linked to donations and withdrawals, including metadata such as transaction IDs, timestamps, and donor information.
+    * Supports efficient queries to generate reports and analytics.
+
+**Frontend (ReactJS)**
+
+1. User Interface:
+
+    * Built using Material-UI for a modern and responsive design.
+    * Adopts Creative Admin dashboard templates to create a visually appealing and user-friendly interface.
+    * Features intuitive navigation for both donors and fund administrators.
+
+2. Charity Fund and Project Dashboard:
+
+    * Displays key metrics and progress updates for charity funds and projects.
+    * Provides real-time updates using data fetched from the backend APIs.
+
+3. Transaction Integration:
+
+    * Leverages AlgoSDK to allow users to make donations and track transactions directly on the Algorand blockchain.
+    * Provides a seamless experience for donors to contribute to their desired projects with transparent transaction details.
+
+4. Real-Time Analytics and Reporting:
+
+    * Generates graphical reports, such as donation trends and project progress, for fund administrators.
+    * Allows filtering and sorting of transaction data to provide actionable insights.
+      
+5. Blockchain Interaction (AlgoSDK)
+
+    * Establishes secure connections to the Algorand blockchain.
+    * Enables functionalities like:
+        * Sending and receiving transactions.
+        * Fetching transaction histories for donors and charity funds.
+        * Ensuring transparency and immutability of donation records through blockchain-based validation.
+.
+
 **Example Pages**
 
 If you want to get inspiration or just show something directly to your clients, you can jump start your development with our pre-built example pages. You will be able to quickly set up the basic structure for your web project.
@@ -167,9 +241,6 @@ At present, we officially aim to support the last two versions of the following 
 
 <img src="https://github.com/creativetimofficial/public-assets/blob/master/logos/chrome-logo.png?raw=true" width="64" height="64"> <img src="https://raw.githubusercontent.com/creativetimofficial/public-assets/master/logos/firefox-logo.png" width="64" height="64"> <img src="https://raw.githubusercontent.com/creativetimofficial/public-assets/master/logos/edge-logo.png" width="64" height="64"> <img src="https://raw.githubusercontent.com/creativetimofficial/public-assets/master/logos/safari-logo.png" width="64" height="64"> <img src="https://raw.githubusercontent.com/creativetimofficial/public-assets/master/logos/opera-logo.png" width="64" height="64">
 
-## Resources
-
-- Demo: <https://demos.creative-tim.com/argon-dashboard-react/#/admin/index?ref=adr-github-readme>
 
 ## Licensing
 
@@ -181,12 +252,3 @@ At present, we officially aim to support the last two versions of the following 
 
 - [Tutorials](https://www.youtube.com/channel/UCVyTG4sCw-rOvB9oHkzZD1w?ref=creativetim)
 
-### Social Media
-
-Twitter: <https://twitter.com/CreativeTim?ref=creativetim>
-
-Facebook: <https://www.facebook.com/CreativeTim?ref=creativetim>
-
-Dribbble: <https://dribbble.com/creativetim?ref=creativetim>
-
-Instagram: <https://www.instagram.com/CreativeTimOfficial?ref=creativetim>
